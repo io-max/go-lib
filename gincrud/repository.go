@@ -32,3 +32,23 @@ type IRepository[T Entity] interface {
 	// DB 访问
 	DB() *gorm.DB
 }
+
+// Repository Repository 实现
+type Repository[T Entity] struct {
+	db *gorm.DB
+}
+
+// NewRepository 创建 Repository
+func NewRepository[T Entity](db *gorm.DB) *Repository[T] {
+	return &Repository[T]{db: db}
+}
+
+// DB 获取底层 db
+func (r *Repository[T]) DB() *gorm.DB {
+	return r.db
+}
+
+// WithTx 创建带事务的 Repository
+func (r *Repository[T]) WithTx(tx *gorm.DB) IRepository[T] {
+	return &Repository[T]{db: tx}
+}
