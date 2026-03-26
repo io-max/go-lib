@@ -112,12 +112,23 @@ func (r *Repository[T]) applyCondition(db *gorm.DB, cond *QueryCondition) *gorm.
 	return db
 }
 
-// applyPagination 应用分页
+// applyPagination 应用分页和排序
 func (r *Repository[T]) applyPagination(db *gorm.DB, cond *QueryCondition) *gorm.DB {
 	if cond == nil {
 		return db
 	}
-	return db.Limit(cond.Limit()).Offset(cond.Offset())
+	db = db.Limit(cond.Limit()).Offset(cond.Offset())
+
+	// 应用排序
+	for _, order := range cond.GetOrderBy() {
+		if order.Desc {
+			db = db.Order(order.Field + " DESC")
+		} else {
+			db = db.Order(order.Field + " ASC")
+		}
+	}
+
+	return db
 }
 
 // GetByID 根据 ID 查询
@@ -151,11 +162,6 @@ func (r *Repository[T]) FindPage(ctx context.Context, cond *QueryCondition) ([]*
 
 	// 应用分页
 	db = r.applyPagination(db, cond)
-
-	// 应用分页排序
-	if cond != nil {
-		db = db.Order(cond.GetSortBy() + " " + cond.GetSortOrder())
-	}
 
 	// 查询
 	var list []*T

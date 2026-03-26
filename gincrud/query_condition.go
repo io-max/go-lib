@@ -80,8 +80,6 @@ type QueryCondition struct {
 	// 分页参数
 	page     int
 	pageSize int
-	sortBy   string
-	sortOrder string
 }
 
 // NewQuery 创建查询条件
@@ -197,17 +195,6 @@ func (q *QueryCondition) PageSize(size int) *QueryCondition {
 	return q
 }
 
-// Sort 设置排序（用于分页查询的排序）
-func (q *QueryCondition) Sort(sortBy string, sortOrder ...string) *QueryCondition {
-	q.sortBy = sortBy
-	if len(sortOrder) > 0 {
-		q.sortOrder = sortOrder[0]
-	} else {
-		q.sortOrder = "desc"
-	}
-	return q
-}
-
 // GetPage 获取页码
 func (q *QueryCondition) GetPage() int {
 	if q.page < 1 {
@@ -225,22 +212,6 @@ func (q *QueryCondition) GetPageSize() int {
 		return 100
 	}
 	return q.pageSize
-}
-
-// GetSortBy 获取排序字段
-func (q *QueryCondition) GetSortBy() string {
-	if q.sortBy == "" {
-		return "id"
-	}
-	return q.sortBy
-}
-
-// GetSortOrder 获取排序方向
-func (q *QueryCondition) GetSortOrder() string {
-	if q.sortOrder == "" {
-		return "desc"
-	}
-	return q.sortOrder
 }
 
 // Offset 计算偏移量

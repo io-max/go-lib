@@ -143,19 +143,6 @@ func TestQueryCondition_PageSizeLimits(t *testing.T) {
 	assert.Equal(t, 100, q.GetPageSize(), "Page size greater than 100 should be capped at 100")
 }
 
-func TestQueryCondition_Sort(t *testing.T) {
-	q := NewQuery()
-	q.Sort("created_at", "asc")
-	assert.Equal(t, "created_at", q.GetSortBy())
-	assert.Equal(t, "asc", q.GetSortOrder())
-}
-
-func TestQueryCondition_SortDefaults(t *testing.T) {
-	q := NewQuery()
-	assert.Equal(t, "id", q.GetSortBy(), "Default sort by should be 'id'")
-	assert.Equal(t, "desc", q.GetSortOrder(), "Default sort order should be 'desc'")
-}
-
 func TestQueryCondition_OffsetCalculation(t *testing.T) {
 	q := NewQuery()
 	q.Page(1).PageSize(10)
