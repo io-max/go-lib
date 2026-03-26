@@ -18,9 +18,9 @@ func TestNewCode(t *testing.T) {
 }
 
 func TestNewCodeDuplicate(t *testing.T) {
-	NewCode(500001, "First error")
+	NewCode(999001, "First error")
 	assert.Panics(t, func() {
-		NewCode(500001, "Duplicate error")
+		NewCode(999001, "Duplicate error")
 	})
 }
 
@@ -130,11 +130,11 @@ func TestRespondErrorWithHTTPStatus(t *testing.T) {
 
 	c.Set(RequestIDKey, "test-trace-id-err-004")
 
-	errCode := NewCode(404001, "Resource Not Found")
+	errCode := NewCode(404999, "Resource Not Found")
 	RespondErrorWithHTTPStatus(c, http.StatusNotFound, errCode)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":404001`)
+	assert.Contains(t, w.Body.String(), `"code":404999`)
 	assert.Contains(t, w.Body.String(), `"message":"Resource Not Found"`)
 }
 
