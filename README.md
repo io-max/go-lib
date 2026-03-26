@@ -63,6 +63,58 @@ go-lib/
 └── examples/      # 示例代码
 ```
 
+## Repository 使用示例
+
+### 基础使用
+
+```go
+type User struct {
+    gincrud.BaseEntity
+    Username string `json:"username"`
+    Email    string `json:"email"`
+}
+
+func main() {
+    db := initDB()
+    repo := gincrud.NewRepository[User](db)
+
+    // 创建
+    user := &User{Username: "alice", Email: "alice@example.com"}
+    repo.Create(ctx, user)
+
+    // 查询
+    found, _ := repo.GetByID(ctx, user.ID)
+
+    // 条件查询
+    cond := gincrud.NewQuery().
+        WhereEq("status", 1).
+        WhereLike("username", "%admin%").
+        OrderBy("created_at", true)
+
+    users, total, _ := repo.List(ctx, cond, &gincrud.BaseQueryDTO{
+        Page: 1, PageSize: 10,
+    })
+}
+```
+
+### 自定义 Repository
+
+```go
+type UserRepository struct {
+    *gincrud.Repository[User]
+}
+
+func NewUserRepository(db *gorm.DB) *UserRepository {
+    return &UserRepository{
+        Repository: gincrud.NewRepository[User](db),
+    }
+}
+
+func (r *UserRepository) GetByUsername(username string) (*User, error) {
+    // 自定义查询逻辑
+}
+```
+
 ## License
 
 MIT
