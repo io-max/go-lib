@@ -161,16 +161,24 @@ func (r *Repository[T]) List(ctx context.Context, cond *QueryCondition, dto Quer
 	return list, total, nil
 }
 
-// Create 创建记录
+// Create 创建
 func (r *Repository[T]) Create(ctx context.Context, entity *T) error {
-	db := r.db.WithContext(ctx)
-	return db.Create(entity).Error
+	(*entity).SetCreatedAt(time.Now())
+	(*entity).SetUpdatedAt(time.Now())
+	(*entity).SetDeleted(0)
+
+	return r.db.WithContext(ctx).Create(entity).Error
 }
 
-// Update 更新记录
+// Update 更新
 func (r *Repository[T]) Update(ctx context.Context, entity *T) error {
-	db := r.db.WithContext(ctx)
-	return db.Save(entity).Error
+	if (*entity).GetID() == 0 {
+		return ErrEntityIDRequired
+	}
+
+	(*entity).SetUpdatedAt(time.Now())
+
+	return r.db.WithContext(ctx).Save(entity).Error
 }
 
 // Delete 软删除记录
