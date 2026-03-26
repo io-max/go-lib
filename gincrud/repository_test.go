@@ -723,3 +723,308 @@ func TestRepository_BatchDelete(t *testing.T) {
 		}
 	})
 }
+
+func TestRepository_Find(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	// 创建测试数据
+	for i := 1; i <= 5; i++ {
+		entity := TestEntity{Name: "test"}
+		if err := repo.Create(ctx, &entity); err != nil {
+			t.Fatalf("Failed to create entity %d: %v", i, err)
+		}
+	}
+
+	t.Run("查询所有记录", func(t *testing.T) {
+		list, err := repo.Find(ctx, nil)
+		if err != nil {
+			t.Fatalf("Find failed: %v", err)
+		}
+		if len(list) != 5 {
+			t.Errorf("Expected 5 records, got %d", len(list))
+		}
+	})
+
+	t.Run("带条件查询", func(t *testing.T) {
+		// 创建一个特殊记录
+		special := TestEntity{Name: "special"}
+		if err := repo.Create(ctx, &special); err != nil {
+			t.Fatalf("Failed to create special entity: %v", err)
+		}
+
+		cond := NewQuery().WhereEq("name", "special")
+		list, err := repo.Find(ctx, cond)
+		if err != nil {
+			t.Fatalf("Find with condition failed: %v", err)
+		}
+		if len(list) != 1 {
+			t.Errorf("Expected 1 record, got %d", len(list))
+		}
+		if list[0].Name != "special" {
+			t.Errorf("Expected name 'special', got '%s'", list[0].Name)
+		}
+	})
+
+	t.Run("不包含已删除的记录", func(t *testing.T) {
+		// 先查询所有记录
+		all, err := repo.Find(ctx, nil)
+		if err != nil {
+			t.Fatalf("Find failed: %v", err)
+		}
+		totalBefore := len(all)
+
+		// 删除第一条记录
+		if err := repo.Delete(ctx, all[0].ID); err != nil {
+			t.Fatalf("Failed to delete entity: %v", err)
+		}
+
+		// 再次查询
+		after, err := repo.Find(ctx, nil)
+		if err != nil {
+			t.Fatalf("Find after delete failed: %v", err)
+		}
+
+		if len(after) != totalBefore-1 {
+			t.Errorf("Expected %d records after delete, got %d", totalBefore-1, len(after))
+		}
+	})
+
+	t.Run("带排序条件", func(t *testing.T) {
+		cond := NewQuery().OrderBy("id", true) // DESC
+		list, err := repo.Find(ctx, cond)
+		if err != nil {
+			t.Fatalf("Find with order failed: %v", err)
+		}
+		// 验证是降序
+		for i := 0; i < len(list)-1; i++ {
+			if list[i].ID < list[i+1].ID {
+				t.Error("Expected descending order")
+				break
+			}
+		}
+	})
+}
+
+func TestRepository_FindFirst(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	t.Run("查询第一条记录", func(t *testing.T) {
+		// 创建测试数据
+		for i := 1; i <= 3; i++ {
+			entity := TestEntity{Name: "test"}
+			if err := repo.Create(ctx, &entity); err != nil {
+				t.Fatalf("Failed to create entity %d: %v", i, err)
+			}
+		}
+
+		result, err := repo.FindFirst(ctx, nil)
+		if err != nil {
+			t.Fatalf("FindFirst failed: %v", err)
+		}
+		if result == nil {
+			t.Fatal("Expected non-nil result")
+		}
+	})
+
+	t.Run("带条件查询第一条", func(t *testing.T) {
+		special := TestEntity{Name: "first_special"}
+		if err := repo.Create(ctx, &special); err != nil {
+			t.Fatalf("Failed to create special entity: %v", err)
+		}
+
+		cond := NewQuery().WhereEq("name", "first_special")
+		result, err := repo.FindFirst(ctx, cond)
+		if err != nil {
+			t.Fatalf("FindFirst with condition failed: %v", err)
+		}
+		if result == nil {
+			t.Fatal("Expected non-nil result")
+		}
+		if result.Name != "first_special" {
+			t.Errorf("Expected name 'first_special', got '%s'", result.Name)
+		}
+	})
+
+	t.Run("查询不存在的记录返回 ErrRecordNotFound", func(t *testing.T) {
+		cond := NewQuery().WhereEq("name", "nonexistent")
+		result, err := repo.FindFirst(ctx, cond)
+		if err == nil {
+			t.Fatal("Expected error for non-existent record")
+		}
+		if result != nil {
+			t.Error("Expected nil result")
+		}
+		// FindFirst 在记录不存在时返回 ErrRecordNotFound
+	})
+
+	t.Run("不包含已删除的记录", func(t *testing.T) {
+		// 查询所有记录
+		all, _ := repo.Find(ctx, nil)
+		if len(all) == 0 {
+			t.Fatal("Need at least one record for this test")
+		}
+
+		// 删除第一条
+		if err := repo.Delete(ctx, all[0].ID); err != nil {
+			t.Fatalf("Failed to delete entity: %v", err)
+		}
+
+		// 尝试用 ID 条件查询已删除的记录
+		cond := NewQuery().WhereEq("id", all[0].ID)
+		result, err := repo.FindFirst(ctx, cond)
+		if err == nil {
+			t.Error("Expected error for deleted record")
+		}
+		if result != nil {
+			t.Error("Expected nil result for deleted record")
+		}
+	})
+}
+
+func TestRepository_Count(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	// 创建测试数据
+	for i := 1; i <= 5; i++ {
+		entity := TestEntity{Name: "count_test"}
+		if err := repo.Create(ctx, &entity); err != nil {
+			t.Fatalf("Failed to create entity %d: %v", i, err)
+		}
+	}
+
+	t.Run("统计所有记录", func(t *testing.T) {
+		count, err := repo.Count(ctx, nil)
+		if err != nil {
+			t.Fatalf("Count failed: %v", err)
+		}
+		if count != 5 {
+			t.Errorf("Expected count 5, got %d", count)
+		}
+	})
+
+	t.Run("带条件统计", func(t *testing.T) {
+		special := TestEntity{Name: "count_special"}
+		if err := repo.Create(ctx, &special); err != nil {
+			t.Fatalf("Failed to create special entity: %v", err)
+		}
+
+		cond := NewQuery().WhereEq("name", "count_special")
+		count, err := repo.Count(ctx, cond)
+		if err != nil {
+			t.Fatalf("Count with condition failed: %v", err)
+		}
+		if count != 1 {
+			t.Errorf("Expected count 1, got %d", count)
+		}
+	})
+
+	t.Run("不包含已删除的记录", func(t *testing.T) {
+		// 统计删除前的数量
+		countBefore, err := repo.Count(ctx, nil)
+		if err != nil {
+			t.Fatalf("Count failed: %v", err)
+		}
+
+		// 查询并删除一条记录
+		all, _ := repo.Find(ctx, nil)
+		if err := repo.Delete(ctx, all[0].ID); err != nil {
+			t.Fatalf("Failed to delete entity: %v", err)
+		}
+
+		// 统计删除后的数量
+		countAfter, err := repo.Count(ctx, nil)
+		if err != nil {
+			t.Fatalf("Count after delete failed: %v", err)
+		}
+
+		if countAfter != countBefore-1 {
+			t.Errorf("Expected count %d after delete, got %d", countBefore-1, countAfter)
+		}
+	})
+
+	t.Run("空表统计返回 0", func(t *testing.T) {
+		// 创建一个新表
+		newDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+		if err != nil {
+			t.Fatalf("Failed to open new database: %v", err)
+		}
+		if err := newDB.AutoMigrate(&TestEntity{}); err != nil {
+			t.Fatalf("Failed to migrate: %v", err)
+		}
+		newRepo := NewRepository[TestEntity](newDB)
+
+		count, err := newRepo.Count(ctx, nil)
+		if err != nil {
+			t.Fatalf("Count on empty table failed: %v", err)
+		}
+		if count != 0 {
+			t.Errorf("Expected count 0, got %d", count)
+		}
+	})
+}
+
+func TestRepository_Exists(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	t.Run("存在的记录返回 true", func(t *testing.T) {
+		entity := TestEntity{Name: "exists_test"}
+		if err := repo.Create(ctx, &entity); err != nil {
+			t.Fatalf("Failed to create entity: %v", err)
+		}
+
+		exists, err := repo.Exists(ctx, entity.ID)
+		if err != nil {
+			t.Fatalf("Exists failed: %v", err)
+		}
+		if !exists {
+			t.Error("Expected true for existing record")
+		}
+	})
+
+	t.Run("不存在的记录返回 false", func(t *testing.T) {
+		exists, err := repo.Exists(ctx, 99999)
+		if err != nil {
+			t.Fatalf("Exists failed: %v", err)
+		}
+		if exists {
+			t.Error("Expected false for non-existent record")
+		}
+	})
+
+	t.Run("已删除的记录返回 false", func(t *testing.T) {
+		entity := TestEntity{Name: "to_delete"}
+		if err := repo.Create(ctx, &entity); err != nil {
+			t.Fatalf("Failed to create entity: %v", err)
+		}
+
+		// 删除前存在
+		existsBefore, err := repo.Exists(ctx, entity.ID)
+		if err != nil {
+			t.Fatalf("Exists before delete failed: %v", err)
+		}
+		if !existsBefore {
+			t.Error("Expected true before delete")
+		}
+
+		// 删除后不存在
+		if err := repo.Delete(ctx, entity.ID); err != nil {
+			t.Fatalf("Failed to delete entity: %v", err)
+		}
+
+		existsAfter, err := repo.Exists(ctx, entity.ID)
+		if err != nil {
+			t.Fatalf("Exists after delete failed: %v", err)
+		}
+		if existsAfter {
+			t.Error("Expected false for deleted record")
+		}
+	})
+}
