@@ -83,7 +83,11 @@ func main() {
     repo.Create(ctx, user)
 
     // 查询
-    found, _ := repo.GetByID(ctx, user.ID)
+    found, _ := repo.FindByID(ctx, user.ID)
+
+    // 批量查询
+    ids := []int64{user.ID}
+    users, _ := repo.FindByIDs(ctx, ids)
 
     // 条件查询
     cond := gincrud.NewQuery().

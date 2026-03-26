@@ -11,7 +11,7 @@ import (
 // IRepository Repository 接口
 type IRepository[T Entity] interface {
 	// 基础 CRUD
-	GetByID(ctx context.Context, id int64) (*T, error)
+	FindByID(ctx context.Context, id int64) (*T, error)
 	FindPage(ctx context.Context, cond *QueryCondition) ([]*T, int64, error)
 	Create(ctx context.Context, entity *T) error
 	Update(ctx context.Context, entity *T) error
@@ -22,6 +22,8 @@ type IRepository[T Entity] interface {
 	BatchCreate(ctx context.Context, entities []*T) error
 	BatchUpdate(ctx context.Context, ids []int64, updates map[string]any) error
 	BatchDelete(ctx context.Context, ids []int64) error
+	FindByIDs(ctx context.Context, ids []int64) ([]*T, error)
+	DeleteByIDs(ctx context.Context, ids []int64) error
 
 	// 查询
 	Find(ctx context.Context, cond *QueryCondition) ([]*T, error)
@@ -131,9 +133,10 @@ func (r *Repository[T]) applyPagination(db *gorm.DB, cond *QueryCondition) *gorm
 	return db
 }
 
-// GetByID 根据 ID 查询
-func (r *Repository[T]) GetByID(ctx context.Context, id int64) (*T, error) {
+// FindByID 根据 ID 查询（原 GetByID）
+func (r *Repository[T]) FindByID(ctx context.Context, id int64) (*T, error) {
 	var entity T
+	entity.SetID(id)
 
 	db := r.db.WithContext(ctx)
 	db = r.withSoftDelete(db)
@@ -145,6 +148,26 @@ func (r *Repository[T]) GetByID(ctx context.Context, id int64) (*T, error) {
 		return nil, err
 	}
 	return &entity, nil
+}
+
+// FindByIDs 根据 ID 批量查询
+func (r *Repository[T]) FindByIDs(ctx context.Context, ids []int64) ([]*T, error) {
+	db := r.db.WithContext(ctx)
+	db = r.withSoftDelete(db)
+
+	var list []*T
+	if err := db.Where("id IN ?", ids).Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// DeleteByIDs 根据 ID 批量软删除
+func (r *Repository[T]) DeleteByIDs(ctx context.Context, ids []int64) error {
+	return r.db.WithContext(ctx).
+		Model(new(T)).
+		Where("id IN ?", ids).
+		Update("deleted", time.Now().Unix()).Error
 }
 
 // FindPage 分页查询

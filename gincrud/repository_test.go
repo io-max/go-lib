@@ -39,7 +39,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func TestRepository_GetByID(t *testing.T) {
+func TestRepository_FindByID(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewRepository[TestEntity](db)
 	ctx := context.Background()
@@ -50,9 +50,9 @@ func TestRepository_GetByID(t *testing.T) {
 			t.Fatalf("Failed to create entity: %v", err)
 		}
 
-		result, err := repo.GetByID(ctx, entity.ID)
+		result, err := repo.FindByID(ctx, entity.ID)
 		if err != nil {
-			t.Fatalf("GetByID failed: %v", err)
+			t.Fatalf("FindByID failed: %v", err)
 		}
 
 		if result == nil {
@@ -67,7 +67,7 @@ func TestRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("查询不存在的记录返回 ErrRecordNotFound", func(t *testing.T) {
-		_, err := repo.GetByID(ctx, 99999)
+		_, err := repo.FindByID(ctx, 99999)
 		if err == nil {
 			t.Fatal("Expected error for non-existent record")
 		}
@@ -85,7 +85,7 @@ func TestRepository_GetByID(t *testing.T) {
 			t.Fatalf("Failed to delete entity: %v", err)
 		}
 
-		_, err := repo.GetByID(ctx, entity.ID)
+		_, err := repo.FindByID(ctx, entity.ID)
 		if err != ErrRecordNotFound {
 			t.Errorf("Expected ErrRecordNotFound for deleted record, got %v", err)
 		}
@@ -228,7 +228,7 @@ func TestRepository_Create(t *testing.T) {
 		}
 
 		// 验证记录可以在数据库中查询到
-		result, err := repo.GetByID(ctx, entity.ID)
+		result, err := repo.FindByID(ctx, entity.ID)
 		if err != nil {
 			t.Fatalf("Failed to get created entity: %v", err)
 		}
@@ -291,7 +291,7 @@ func TestRepository_Update(t *testing.T) {
 		}
 
 		// 验证记录已更新
-		result, err := repo.GetByID(ctx, entity.ID)
+		result, err := repo.FindByID(ctx, entity.ID)
 		if err != nil {
 			t.Fatalf("Failed to get updated entity: %v", err)
 		}
@@ -343,8 +343,8 @@ func TestRepository_Delete(t *testing.T) {
 			t.Fatalf("Delete failed: %v", err)
 		}
 
-		// 验证软删除后无法通过 GetByID 查询到
-		_, err = repo.GetByID(ctx, entity.ID)
+		// 验证软删除后无法通过 FindByID 查询到
+		_, err = repo.FindByID(ctx, entity.ID)
 		if err != ErrRecordNotFound {
 			t.Errorf("Expected ErrRecordNotFound after soft delete, got %v", err)
 		}
@@ -412,7 +412,7 @@ func TestRepository_TrulyDelete(t *testing.T) {
 		}
 
 		// 验证 GetByID 也返回 NotFound
-		_, err = repo.GetByID(ctx, entityID)
+		_, err = repo.FindByID(ctx, entityID)
 		if err != ErrRecordNotFound {
 			t.Errorf("Expected ErrRecordNotFound, got %v", err)
 		}
@@ -514,7 +514,7 @@ func TestRepository_BatchCreate(t *testing.T) {
 
 		// 验证所有记录可以在数据库中查询到
 		for _, e := range entities {
-			result, err := repo.GetByID(ctx, e.ID)
+			result, err := repo.FindByID(ctx, e.ID)
 			if err != nil {
 				t.Fatalf("Failed to get created entity %d: %v", e.ID, err)
 			}
@@ -579,7 +579,7 @@ func TestRepository_BatchUpdate(t *testing.T) {
 
 		// 验证所有记录已更新
 		for _, e := range entities {
-			result, err := repo.GetByID(ctx, e.ID)
+			result, err := repo.FindByID(ctx, e.ID)
 			if err != nil {
 				t.Fatalf("Failed to get updated entity %d: %v", e.ID, err)
 			}
@@ -609,13 +609,13 @@ func TestRepository_BatchUpdate(t *testing.T) {
 		}
 
 		// 验证第一条记录未变
-		result1, _ := repo.GetByID(ctx, entities[0].ID)
+		result1, _ := repo.FindByID(ctx, entities[0].ID)
 		if result1.Name != "keep1" {
 			t.Errorf("Entity 1: Expected 'keep1', got '%s'", result1.Name)
 		}
 
 		// 验证第三条记录已更新
-		result3, _ := repo.GetByID(ctx, entities[2].ID)
+		result3, _ := repo.FindByID(ctx, entities[2].ID)
 		if result3.Name != "updated_partial" {
 			t.Errorf("Entity 3: Expected 'updated_partial', got '%s'", result3.Name)
 		}
@@ -649,9 +649,9 @@ func TestRepository_BatchDelete(t *testing.T) {
 			t.Fatalf("BatchDelete failed: %v", err)
 		}
 
-		// 验证软删除后无法通过 GetByID 查询到
+		// 验证软删除后无法通过 FindByID 查询到
 		for _, e := range entities {
-			_, err = repo.GetByID(ctx, e.ID)
+			_, err = repo.FindByID(ctx, e.ID)
 			if err != ErrRecordNotFound {
 				t.Errorf("Expected ErrRecordNotFound after soft delete for entity %d", e.ID)
 			}
@@ -691,7 +691,7 @@ func TestRepository_BatchDelete(t *testing.T) {
 		}
 
 		// 验证第一条记录仍存在
-		result1, err := repo.GetByID(ctx, entities[0].ID)
+		result1, err := repo.FindByID(ctx, entities[0].ID)
 		if err != nil {
 			t.Errorf("Entity 1 should still exist: %v", err)
 		}
@@ -700,7 +700,7 @@ func TestRepository_BatchDelete(t *testing.T) {
 		}
 
 		// 验证第二条记录已被删除
-		_, err = repo.GetByID(ctx, entities[1].ID)
+		_, err = repo.FindByID(ctx, entities[1].ID)
 		if err != ErrRecordNotFound {
 			t.Error("Entity 2 should be deleted")
 		}
@@ -1008,6 +1008,184 @@ func TestRepository_Exists(t *testing.T) {
 		}
 		if existsAfter {
 			t.Error("Expected false for deleted record")
+		}
+	})
+}
+
+func TestRepository_FindByIDs(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	// 创建测试数据
+	entities := []*TestEntity{
+		{Name: "entity1"},
+		{Name: "entity2"},
+		{Name: "entity3"},
+	}
+	if err := repo.BatchCreate(ctx, entities); err != nil {
+		t.Fatalf("BatchCreate failed: %v", err)
+	}
+
+	t.Run("成功批量查询存在的记录", func(t *testing.T) {
+		ids := []int64{entities[0].ID, entities[1].ID, entities[2].ID}
+		results, err := repo.FindByIDs(ctx, ids)
+		if err != nil {
+			t.Fatalf("FindByIDs failed: %v", err)
+		}
+
+		if len(results) != 3 {
+			t.Errorf("Expected 3 results, got %d", len(results))
+		}
+
+		// 验证返回的结果
+		names := make(map[string]bool)
+		for _, r := range results {
+			names[r.Name] = true
+		}
+		if !names["entity1"] || !names["entity2"] || !names["entity3"] {
+			t.Errorf("Expected all entities to be returned")
+		}
+	})
+
+	t.Run("查询部分存在的记录", func(t *testing.T) {
+		ids := []int64{entities[0].ID, 99999}
+		results, err := repo.FindByIDs(ctx, ids)
+		if err != nil {
+			t.Fatalf("FindByIDs failed: %v", err)
+		}
+
+		if len(results) != 1 {
+			t.Errorf("Expected 1 result, got %d", len(results))
+		}
+		if results[0].ID != entities[0].ID {
+			t.Errorf("Expected entity ID %d, got %d", entities[0].ID, results[0].ID)
+		}
+	})
+
+	t.Run("查询空 ID 列表", func(t *testing.T) {
+		ids := []int64{}
+		results, err := repo.FindByIDs(ctx, ids)
+		if err != nil {
+			t.Fatalf("FindByIDs failed: %v", err)
+		}
+
+		if len(results) != 0 {
+			t.Errorf("Expected 0 results for empty ID list, got %d", len(results))
+		}
+	})
+
+	t.Run("不包含已删除的记录", func(t *testing.T) {
+		// 删除第一条记录
+		if err := repo.Delete(ctx, entities[0].ID); err != nil {
+			t.Fatalf("Delete failed: %v", err)
+		}
+
+		// 查询所有 ID
+		ids := []int64{entities[0].ID, entities[1].ID}
+		results, err := repo.FindByIDs(ctx, ids)
+		if err != nil {
+			t.Fatalf("FindByIDs failed: %v", err)
+		}
+
+		// 只应返回未删除的记录
+		if len(results) != 1 {
+			t.Errorf("Expected 1 result (excluding deleted), got %d", len(results))
+		}
+		if results[0].ID != entities[1].ID {
+			t.Errorf("Expected entity ID %d, got %d", entities[1].ID, results[0].ID)
+		}
+	})
+}
+
+func TestRepository_DeleteByIDs(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	t.Run("成功批量软删除记录", func(t *testing.T) {
+		// 创建测试数据
+		entities := []*TestEntity{
+			{Name: "to_delete1"},
+			{Name: "to_delete2"},
+			{Name: "to_delete3"},
+		}
+		if err := repo.BatchCreate(ctx, entities); err != nil {
+			t.Fatalf("BatchCreate failed: %v", err)
+		}
+
+		ids := []int64{entities[0].ID, entities[1].ID, entities[2].ID}
+
+		beforeDelete := time.Now().Unix()
+		err := repo.DeleteByIDs(ctx, ids)
+		afterDelete := time.Now().Unix()
+
+		if err != nil {
+			t.Fatalf("DeleteByIDs failed: %v", err)
+		}
+
+		// 验证软删除后无法通过 FindByID 查询到
+		for _, e := range entities {
+			_, err = repo.FindByID(ctx, e.ID)
+			if err != ErrRecordNotFound {
+				t.Errorf("Expected ErrRecordNotFound after soft delete for entity %d", e.ID)
+			}
+		}
+
+		// 验证数据库中记录仍存在但 deleted 字段已设置
+		for _, e := range entities {
+			var dbEntity TestEntity
+			if err := db.Where("id = ?", e.ID).First(&dbEntity).Error; err != nil {
+				t.Fatalf("Failed to find entity %d in DB: %v", e.ID, err)
+			}
+			if dbEntity.Deleted == 0 {
+				t.Errorf("Entity %d: Expected Deleted to be set after soft delete", e.ID)
+			}
+			if dbEntity.Deleted < beforeDelete || dbEntity.Deleted > afterDelete {
+				t.Errorf("Entity %d: Expected Deleted timestamp %d to be within [%d, %d]", e.ID, dbEntity.Deleted, beforeDelete, afterDelete)
+			}
+		}
+	})
+
+	t.Run("批量删除部分记录", func(t *testing.T) {
+		// 创建测试数据
+		entities := []*TestEntity{
+			{Name: "keep1"},
+			{Name: "delete_me"},
+			{Name: "keep2"},
+		}
+		if err := repo.BatchCreate(ctx, entities); err != nil {
+			t.Fatalf("BatchCreate failed: %v", err)
+		}
+
+		// 只删除第二条记录
+		ids := []int64{entities[1].ID}
+		err := repo.DeleteByIDs(ctx, ids)
+		if err != nil {
+			t.Fatalf("DeleteByIDs failed: %v", err)
+		}
+
+		// 验证第一条记录仍存在
+		result1, err := repo.FindByID(ctx, entities[0].ID)
+		if err != nil {
+			t.Errorf("Entity 1 should still exist: %v", err)
+		}
+		if result1.Name != "keep1" {
+			t.Errorf("Entity 1: Expected 'keep1', got '%s'", result1.Name)
+		}
+
+		// 验证第二条记录已被删除
+		_, err = repo.FindByID(ctx, entities[1].ID)
+		if err != ErrRecordNotFound {
+			t.Error("Entity 2 should be deleted")
+		}
+	})
+
+	t.Run("删除空 ID 列表不报错", func(t *testing.T) {
+		ids := []int64{}
+		err := repo.DeleteByIDs(ctx, ids)
+		if err != nil {
+			t.Errorf("DeleteByIDs with empty ID list should not return error: %v", err)
 		}
 	})
 }
