@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+log:
+  level: info
+  format: json
+
+jwt:
+  secret: "your-secret-key-change-in-production"

@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+log:
+  level: warn
+  format: json
+
+jwt:
+  secret: "CHANGE_THIS_SECRET_IN_PRODUCTION"

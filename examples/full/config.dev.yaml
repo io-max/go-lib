@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+log:
+  level: debug
+  format: console
+
+jwt:
+  secret: "dev-secret-key"
