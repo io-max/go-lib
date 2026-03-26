@@ -198,10 +198,9 @@ func (r *Repository[T]) Delete(ctx context.Context, id int64) error {
 
 // TrulyDelete 硬删除记录
 func (r *Repository[T]) TrulyDelete(ctx context.Context, id int64) error {
-	db := r.db.WithContext(ctx)
 	var entity T
 	entity.SetID(id)
-	return db.Delete(&entity).Error
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&entity).Error
 }
 
 // BatchCreate 批量创建

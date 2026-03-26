@@ -335,6 +335,109 @@ func TestRepository_Update(t *testing.T) {
 	})
 }
 
+func TestRepository_Delete(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	t.Run("成功软删除记录", func(t *testing.T) {
+		entity := TestEntity{Name: "to_delete"}
+		if err := repo.Create(ctx, &entity); err != nil {
+			t.Fatalf("Failed to create entity: %v", err)
+		}
+
+		beforeDelete := time.Now().Unix()
+		err := repo.Delete(ctx, entity.ID)
+		afterDelete := time.Now().Unix()
+
+		if err != nil {
+			t.Fatalf("Delete failed: %v", err)
+		}
+
+		// 验证软删除后无法通过 GetByID 查询到
+		_, err = repo.GetByID(ctx, entity.ID)
+		if err != ErrRecordNotFound {
+			t.Errorf("Expected ErrRecordNotFound after soft delete, got %v", err)
+		}
+
+		// 验证数据库中记录仍存在但 deleted 字段已设置
+		var dbEntity TestEntity
+		if err := db.Where("id = ?", entity.ID).First(&dbEntity).Error; err != nil {
+			t.Fatalf("Failed to find entity in DB: %v", err)
+		}
+		if dbEntity.Deleted == 0 {
+			t.Error("Expected Deleted to be set after soft delete")
+		}
+		if dbEntity.Deleted < beforeDelete || dbEntity.Deleted > afterDelete {
+			t.Errorf("Expected Deleted timestamp %d to be within [%d, %d]", dbEntity.Deleted, beforeDelete, afterDelete)
+		}
+	})
+
+	t.Run("删除不存在的记录返回错误", func(t *testing.T) {
+		err := repo.Delete(ctx, 99999)
+		if err == nil {
+			t.Fatal("Expected error for non-existent record")
+		}
+	})
+
+	t.Run("删除已删除的记录返回错误", func(t *testing.T) {
+		entity := TestEntity{Name: "delete_twice"}
+		if err := repo.Create(ctx, &entity); err != nil {
+			t.Fatalf("Failed to create entity: %v", err)
+		}
+		if err := repo.Delete(ctx, entity.ID); err != nil {
+			t.Fatalf("Failed to delete entity: %v", err)
+		}
+
+		// 再次删除应返回错误（因为记录已被软删除过滤）
+		err := repo.Delete(ctx, entity.ID)
+		if err == nil {
+			t.Fatal("Expected error for already deleted record")
+		}
+	})
+}
+
+func TestRepository_TrulyDelete(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	t.Run("成功硬删除记录", func(t *testing.T) {
+		entity := TestEntity{Name: "to_truly_delete"}
+		if err := repo.Create(ctx, &entity); err != nil {
+			t.Fatalf("Failed to create entity: %v", err)
+		}
+
+		entityID := entity.ID
+
+		err := repo.TrulyDelete(ctx, entityID)
+		if err != nil {
+			t.Fatalf("TrulyDelete failed: %v", err)
+		}
+
+		// 验证记录在数据库中完全消失
+		var dbEntity TestEntity
+		err = db.Where("id = ?", entityID).First(&dbEntity).Error
+		if err != gorm.ErrRecordNotFound {
+			t.Errorf("Expected gorm.ErrRecordNotFound, got %v", err)
+		}
+
+		// 验证 GetByID 也返回 NotFound
+		_, err = repo.GetByID(ctx, entityID)
+		if err != ErrRecordNotFound {
+			t.Errorf("Expected ErrRecordNotFound, got %v", err)
+		}
+	})
+
+	t.Run("删除不存在的记录不返回错误", func(t *testing.T) {
+		// GORM 的 Delete 操作在记录不存在时不会返回错误
+		err := repo.TrulyDelete(ctx, 99999)
+		if err != nil {
+			t.Errorf("Expected no error for non-existent record, got %v", err)
+		}
+	})
+}
+
 func TestRepository_ApplyCondition(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewRepository[TestEntity](db)
