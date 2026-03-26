@@ -28,14 +28,24 @@ import (
 )
 
 func main() {
-    logger := log.MustLoad(log.DefaultConfig())
+    // 初始化日志
+    logger := log.MustLoad(log.Config{
+        Level:  log.InfoLevel,
+        Format: "json",
+    })
     log.SetGlobal(logger)
 
     r := gin.New()
-    r.Use(middleware.RecoveryMiddleware())
 
+    // 基础中间件
+    r.Use(middleware.RecoveryMiddleware(middleware.RecoveryMiddlewareConfig{
+        Logger: logger,
+    }))
+    r.Use(middleware.RequestIDMiddleware(middleware.RequestIDMiddlewareConfig{}))
+
+    // 路由
     r.GET("/hello", func(c *gin.Context) {
-        middleware.RespondSuccess(c, gin.H{"message": "Hello!"})
+        middleware.RespondSuccessWithData(c, gin.H{"message": "Hello!"})
     })
 
     r.Run(":8080")
