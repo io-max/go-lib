@@ -205,8 +205,14 @@ func (r *Repository[T]) TrulyDelete(ctx context.Context, id int64) error {
 
 // BatchCreate 批量创建
 func (r *Repository[T]) BatchCreate(ctx context.Context, entities []*T) error {
-	db := r.db.WithContext(ctx)
-	return db.Create(&entities).Error
+	now := time.Now()
+	for _, e := range entities {
+		(*e).SetCreatedAt(now)
+		(*e).SetUpdatedAt(now)
+		(*e).SetDeleted(0)
+	}
+
+	return r.db.WithContext(ctx).Create(&entities).Error
 }
 
 // BatchUpdate 批量更新

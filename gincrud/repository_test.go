@@ -487,3 +487,239 @@ func TestRepository_ApplyCondition(t *testing.T) {
 		}
 	})
 }
+
+func TestRepository_BatchCreate(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	t.Run("成功批量创建记录", func(t *testing.T) {
+		entities := []*TestEntity{
+			{Name: "batch1"},
+			{Name: "batch2"},
+			{Name: "batch3"},
+		}
+
+		err := repo.BatchCreate(ctx, entities)
+		if err != nil {
+			t.Fatalf("BatchCreate failed: %v", err)
+		}
+
+		// 验证所有记录都有 ID
+		for i, e := range entities {
+			if e.ID == 0 {
+				t.Errorf("Entity %d: Expected ID to be set", i)
+			}
+		}
+
+		// 验证时间戳被设置
+		for i, e := range entities {
+			if e.CreatedAt.IsZero() {
+				t.Errorf("Entity %d: Expected CreatedAt to be set", i)
+			}
+			if e.UpdatedAt.IsZero() {
+				t.Errorf("Entity %d: Expected UpdatedAt to be set", i)
+			}
+		}
+
+		// 验证 deleted 被设置为 0
+		for i, e := range entities {
+			if e.Deleted != 0 {
+				t.Errorf("Entity %d: Expected Deleted to be 0, got %d", i, e.Deleted)
+			}
+		}
+
+		// 验证所有记录可以在数据库中查询到
+		for _, e := range entities {
+			result, err := repo.GetByID(ctx, e.ID)
+			if err != nil {
+				t.Fatalf("Failed to get created entity %d: %v", e.ID, err)
+			}
+			if result.Name == "" {
+				t.Errorf("Entity %d: Expected non-empty name", e.ID)
+			}
+		}
+	})
+
+	t.Run("批量创建时自动设置相同的时间戳", func(t *testing.T) {
+		entities := []*TestEntity{
+			{Name: "time1"},
+			{Name: "time2"},
+		}
+
+		beforeCreate := time.Now()
+		err := repo.BatchCreate(ctx, entities)
+		afterCreate := time.Now()
+
+		if err != nil {
+			t.Fatalf("BatchCreate failed: %v", err)
+		}
+
+		// 验证所有实体的时间戳在合理范围内
+		for i, e := range entities {
+			if e.CreatedAt.Before(beforeCreate) || e.CreatedAt.After(afterCreate) {
+				t.Errorf("Entity %d: CreatedAt %v is not within expected range", i, e.CreatedAt)
+			}
+			// 验证 CreatedAt 和 UpdatedAt 相等
+			if e.CreatedAt.Unix() != e.UpdatedAt.Unix() {
+				t.Errorf("Entity %d: Expected CreatedAt and UpdatedAt to be equal", i)
+			}
+		}
+	})
+}
+
+func TestRepository_BatchUpdate(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	t.Run("成功批量更新记录", func(t *testing.T) {
+		// 先创建记录
+		entities := []*TestEntity{
+			{Name: "original1"},
+			{Name: "original2"},
+			{Name: "original3"},
+		}
+		if err := repo.BatchCreate(ctx, entities); err != nil {
+			t.Fatalf("BatchCreate failed: %v", err)
+		}
+
+		// 收集 ID
+		ids := []int64{entities[0].ID, entities[1].ID, entities[2].ID}
+
+		// 批量更新
+		updates := map[string]any{"name": "updated"}
+		err := repo.BatchUpdate(ctx, ids, updates)
+		if err != nil {
+			t.Fatalf("BatchUpdate failed: %v", err)
+		}
+
+		// 验证所有记录已更新
+		for _, e := range entities {
+			result, err := repo.GetByID(ctx, e.ID)
+			if err != nil {
+				t.Fatalf("Failed to get updated entity %d: %v", e.ID, err)
+			}
+			if result.Name != "updated" {
+				t.Errorf("Entity %d: Expected name 'updated', got '%s'", e.ID, result.Name)
+			}
+		}
+	})
+
+	t.Run("批量更新部分记录", func(t *testing.T) {
+		// 先创建记录
+		entities := []*TestEntity{
+			{Name: "keep1"},
+			{Name: "keep2"},
+			{Name: "update_me"},
+		}
+		if err := repo.BatchCreate(ctx, entities); err != nil {
+			t.Fatalf("BatchCreate failed: %v", err)
+		}
+
+		// 只更新第三条记录
+		ids := []int64{entities[2].ID}
+		updates := map[string]any{"name": "updated_partial"}
+		err := repo.BatchUpdate(ctx, ids, updates)
+		if err != nil {
+			t.Fatalf("BatchUpdate failed: %v", err)
+		}
+
+		// 验证第一条记录未变
+		result1, _ := repo.GetByID(ctx, entities[0].ID)
+		if result1.Name != "keep1" {
+			t.Errorf("Entity 1: Expected 'keep1', got '%s'", result1.Name)
+		}
+
+		// 验证第三条记录已更新
+		result3, _ := repo.GetByID(ctx, entities[2].ID)
+		if result3.Name != "updated_partial" {
+			t.Errorf("Entity 3: Expected 'updated_partial', got '%s'", result3.Name)
+		}
+	})
+}
+
+func TestRepository_BatchDelete(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRepository[TestEntity](db)
+	ctx := context.Background()
+
+	t.Run("成功批量软删除记录", func(t *testing.T) {
+		// 先创建记录
+		entities := []*TestEntity{
+			{Name: "delete1"},
+			{Name: "delete2"},
+			{Name: "delete3"},
+		}
+		if err := repo.BatchCreate(ctx, entities); err != nil {
+			t.Fatalf("BatchCreate failed: %v", err)
+		}
+
+		// 收集 ID
+		ids := []int64{entities[0].ID, entities[1].ID, entities[2].ID}
+
+		beforeDelete := time.Now().Unix()
+		err := repo.BatchDelete(ctx, ids)
+		afterDelete := time.Now().Unix()
+
+		if err != nil {
+			t.Fatalf("BatchDelete failed: %v", err)
+		}
+
+		// 验证软删除后无法通过 GetByID 查询到
+		for _, e := range entities {
+			_, err = repo.GetByID(ctx, e.ID)
+			if err != ErrRecordNotFound {
+				t.Errorf("Expected ErrRecordNotFound after soft delete for entity %d", e.ID)
+			}
+		}
+
+		// 验证数据库中记录仍存在但 deleted 字段已设置
+		for _, e := range entities {
+			var dbEntity TestEntity
+			if err := db.Where("id = ?", e.ID).First(&dbEntity).Error; err != nil {
+				t.Fatalf("Failed to find entity %d in DB: %v", e.ID, err)
+			}
+			if dbEntity.Deleted == 0 {
+				t.Errorf("Entity %d: Expected Deleted to be set after soft delete", e.ID)
+			}
+			if dbEntity.Deleted < beforeDelete || dbEntity.Deleted > afterDelete {
+				t.Errorf("Entity %d: Expected Deleted timestamp %d to be within [%d, %d]", e.ID, dbEntity.Deleted, beforeDelete, afterDelete)
+			}
+		}
+	})
+
+	t.Run("批量删除部分记录", func(t *testing.T) {
+		// 先创建记录
+		entities := []*TestEntity{
+			{Name: "keep1"},
+			{Name: "delete_me"},
+			{Name: "keep2"},
+		}
+		if err := repo.BatchCreate(ctx, entities); err != nil {
+			t.Fatalf("BatchCreate failed: %v", err)
+		}
+
+		// 只删除第二条记录
+		ids := []int64{entities[1].ID}
+		err := repo.BatchDelete(ctx, ids)
+		if err != nil {
+			t.Fatalf("BatchDelete failed: %v", err)
+		}
+
+		// 验证第一条记录仍存在
+		result1, err := repo.GetByID(ctx, entities[0].ID)
+		if err != nil {
+			t.Errorf("Entity 1 should still exist: %v", err)
+		}
+		if result1.Name != "keep1" {
+			t.Errorf("Entity 1: Expected 'keep1', got '%s'", result1.Name)
+		}
+
+		// 验证第二条记录已被删除
+		_, err = repo.GetByID(ctx, entities[1].ID)
+		if err != ErrRecordNotFound {
+			t.Error("Entity 2 should be deleted")
+		}
+	})
+}
