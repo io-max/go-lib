@@ -12,10 +12,15 @@ import (
 // mockLogger 模拟 Logger 用于测试
 type mockLogger struct {
 	errors []string
+	infos  []string
 }
 
 func (m *mockLogger) Error(msg string, keys ...interface{}) {
 	m.errors = append(m.errors, msg)
+}
+
+func (m *mockLogger) Info(msg string, keys ...interface{}) {
+	m.infos = append(m.infos, msg)
 }
 
 func TestRecoveryMiddleware(t *testing.T) {

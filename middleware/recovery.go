@@ -9,6 +9,7 @@ import (
 // Logger Logger 接口定义（避免循环依赖）
 type Logger interface {
 	Error(msg string, keys ...interface{})
+	Info(msg string, keys ...interface{})
 }
 
 // RecoveryMiddlewareConfig Recovery 中间件配置
