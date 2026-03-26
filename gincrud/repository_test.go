@@ -92,7 +92,7 @@ func TestRepository_GetByID(t *testing.T) {
 	})
 }
 
-func TestRepository_List(t *testing.T) {
+func TestRepository_FindPage(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewRepository[TestEntity](db)
 	ctx := context.Background()
@@ -105,12 +105,10 @@ func TestRepository_List(t *testing.T) {
 	}
 
 	t.Run("分页查询第一页", func(t *testing.T) {
-		dto := &BaseQueryDTO{Page: 1, PageSize: 5}
-		dto.Normalize()
-
-		list, total, err := repo.List(ctx, nil, dto)
+		cond := NewQuery().Page(1).PageSize(5)
+		list, total, err := repo.FindPage(ctx, cond)
 		if err != nil {
-			t.Fatalf("List failed: %v", err)
+			t.Fatalf("FindPage failed: %v", err)
 		}
 
 		if total != 15 {
@@ -122,12 +120,10 @@ func TestRepository_List(t *testing.T) {
 	})
 
 	t.Run("分页查询第二页", func(t *testing.T) {
-		dto := &BaseQueryDTO{Page: 2, PageSize: 5}
-		dto.Normalize()
-
-		list, total, err := repo.List(ctx, nil, dto)
+		cond := NewQuery().Page(2).PageSize(5)
+		list, total, err := repo.FindPage(ctx, cond)
 		if err != nil {
-			t.Fatalf("List failed: %v", err)
+			t.Fatalf("FindPage failed: %v", err)
 		}
 
 		if total != 15 {
@@ -139,12 +135,10 @@ func TestRepository_List(t *testing.T) {
 	})
 
 	t.Run("查询所有数据", func(t *testing.T) {
-		dto := &BaseQueryDTO{Page: 1, PageSize: 100}
-		dto.Normalize()
-
-		list, total, err := repo.List(ctx, nil, dto)
+		cond := NewQuery().Page(1).PageSize(100)
+		list, total, err := repo.FindPage(ctx, cond)
 		if err != nil {
-			t.Fatalf("List failed: %v", err)
+			t.Fatalf("FindPage failed: %v", err)
 		}
 
 		if total != 15 {
@@ -161,13 +155,10 @@ func TestRepository_List(t *testing.T) {
 			t.Fatalf("Failed to create special entity: %v", err)
 		}
 
-		cond := NewQuery().WhereEq("name", "special")
-		dto := &BaseQueryDTO{Page: 1, PageSize: 10}
-		dto.Normalize()
-
-		list, total, err := repo.List(ctx, cond, dto)
+		cond := NewQuery().WhereEq("name", "special").Page(1).PageSize(10)
+		list, total, err := repo.FindPage(ctx, cond)
 		if err != nil {
-			t.Fatalf("List with condition failed: %v", err)
+			t.Fatalf("FindPage with condition failed: %v", err)
 		}
 
 		if total != 1 {
@@ -182,23 +173,21 @@ func TestRepository_List(t *testing.T) {
 	})
 
 	t.Run("不包含已删除的记录", func(t *testing.T) {
-		dto := &BaseQueryDTO{Page: 1, PageSize: 100}
-		dto.Normalize()
-
-		_, totalBefore, err := repo.List(ctx, nil, dto)
+		cond := NewQuery().Page(1).PageSize(100)
+		_, totalBefore, err := repo.FindPage(ctx, cond)
 		if err != nil {
-			t.Fatalf("List failed: %v", err)
+			t.Fatalf("FindPage failed: %v", err)
 		}
 
-		all, _, _ := repo.List(ctx, nil, dto)
+		all, _, _ := repo.FindPage(ctx, cond)
 		firstID := all[0].ID
 		if err := repo.Delete(ctx, firstID); err != nil {
 			t.Fatalf("Failed to delete entity: %v", err)
 		}
 
-		_, totalAfter, err := repo.List(ctx, nil, dto)
+		_, totalAfter, err := repo.FindPage(ctx, cond)
 		if err != nil {
-			t.Fatalf("List after delete failed: %v", err)
+			t.Fatalf("FindPage after delete failed: %v", err)
 		}
 
 		if totalAfter != totalBefore-1 {
@@ -452,13 +441,10 @@ func TestRepository_ApplyCondition(t *testing.T) {
 	}
 
 	t.Run("等于条件", func(t *testing.T) {
-		cond := NewQuery().WhereEq("name", "Bob")
-		dto := &BaseQueryDTO{Page: 1, PageSize: 10}
-		dto.Normalize()
-
-		list, total, err := repo.List(ctx, cond, dto)
+		cond := NewQuery().WhereEq("name", "Bob").Page(1).PageSize(10)
+		list, total, err := repo.FindPage(ctx, cond)
 		if err != nil {
-			t.Fatalf("List failed: %v", err)
+			t.Fatalf("FindPage failed: %v", err)
 		}
 
 		if total != 1 {
@@ -470,13 +456,10 @@ func TestRepository_ApplyCondition(t *testing.T) {
 	})
 
 	t.Run("排序条件", func(t *testing.T) {
-		cond := NewQuery().OrderBy("id", true)
-		dto := &BaseQueryDTO{Page: 1, PageSize: 2}
-		dto.Normalize()
-
-		list, total, err := repo.List(ctx, cond, dto)
+		cond := NewQuery().OrderBy("id", true).Page(1).PageSize(2)
+		list, total, err := repo.FindPage(ctx, cond)
 		if err != nil {
-			t.Fatalf("List failed: %v", err)
+			t.Fatalf("FindPage failed: %v", err)
 		}
 
 		if total != 4 {

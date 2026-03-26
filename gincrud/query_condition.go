@@ -76,8 +76,12 @@ type QueryCondition struct {
 	whereNotNull []string
 	preloads     []string
 	orderBy      []OrderByField
-	limit        int
-	offset       int
+
+	// 分页参数
+	page     int
+	pageSize int
+	sortBy   string
+	sortOrder string
 }
 
 // NewQuery 创建查询条件
@@ -181,16 +185,72 @@ func (q *QueryCondition) OrderBy(field string, desc ...bool) *QueryCondition {
 	return q
 }
 
-// Limit 设置限制
-func (q *QueryCondition) Limit(n int) *QueryCondition {
-	q.limit = n
+// Page 设置页码
+func (q *QueryCondition) Page(page int) *QueryCondition {
+	q.page = page
 	return q
 }
 
-// Offset 设置偏移
-func (q *QueryCondition) Offset(n int) *QueryCondition {
-	q.offset = n
+// PageSize 设置每页数量
+func (q *QueryCondition) PageSize(size int) *QueryCondition {
+	q.pageSize = size
 	return q
+}
+
+// Sort 设置排序（用于分页查询的排序）
+func (q *QueryCondition) Sort(sortBy string, sortOrder ...string) *QueryCondition {
+	q.sortBy = sortBy
+	if len(sortOrder) > 0 {
+		q.sortOrder = sortOrder[0]
+	} else {
+		q.sortOrder = "desc"
+	}
+	return q
+}
+
+// GetPage 获取页码
+func (q *QueryCondition) GetPage() int {
+	if q.page < 1 {
+		return 1
+	}
+	return q.page
+}
+
+// GetPageSize 获取每页数量
+func (q *QueryCondition) GetPageSize() int {
+	if q.pageSize < 1 {
+		return 10
+	}
+	if q.pageSize > 100 {
+		return 100
+	}
+	return q.pageSize
+}
+
+// GetSortBy 获取排序字段
+func (q *QueryCondition) GetSortBy() string {
+	if q.sortBy == "" {
+		return "id"
+	}
+	return q.sortBy
+}
+
+// GetSortOrder 获取排序方向
+func (q *QueryCondition) GetSortOrder() string {
+	if q.sortOrder == "" {
+		return "desc"
+	}
+	return q.sortOrder
+}
+
+// Offset 计算偏移量
+func (q *QueryCondition) Offset() int {
+	return (q.GetPage() - 1) * q.GetPageSize()
+}
+
+// Limit 获取限制数量
+func (q *QueryCondition) Limit() int {
+	return q.GetPageSize()
 }
 
 // Getters
@@ -207,5 +267,3 @@ func (q *QueryCondition) GetWhereNull() []string         { return q.whereNull }
 func (q *QueryCondition) GetWhereNotNull() []string      { return q.whereNotNull }
 func (q *QueryCondition) GetPreloads() []string          { return q.preloads }
 func (q *QueryCondition) GetOrderBy() []OrderByField     { return q.orderBy }
-func (q *QueryCondition) GetLimit() int                  { return q.limit }
-func (q *QueryCondition) GetOffset() int                 { return q.offset }

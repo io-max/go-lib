@@ -89,11 +89,11 @@ func main() {
     cond := gincrud.NewQuery().
         WhereEq("status", 1).
         WhereLike("username", "%admin%").
-        OrderBy("created_at", true)
+        OrderBy("created_at", true).
+        Page(1).
+        PageSize(10)
 
-    users, total, _ := repo.List(ctx, cond, &gincrud.BaseQueryDTO{
-        Page: 1, PageSize: 10,
-    })
+    users, total, _ := repo.FindPage(ctx, cond)
 }
 ```
 

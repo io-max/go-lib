@@ -12,7 +12,7 @@ import (
 type IRepository[T Entity] interface {
 	// 基础 CRUD
 	GetByID(ctx context.Context, id int64) (*T, error)
-	List(ctx context.Context, cond *QueryCondition, dto QueryDTO) ([]*T, int64, error)
+	FindPage(ctx context.Context, cond *QueryCondition) ([]*T, int64, error)
 	Create(ctx context.Context, entity *T) error
 	Update(ctx context.Context, entity *T) error
 	Delete(ctx context.Context, id int64) error
@@ -113,11 +113,11 @@ func (r *Repository[T]) applyCondition(db *gorm.DB, cond *QueryCondition) *gorm.
 }
 
 // applyPagination 应用分页
-func (r *Repository[T]) applyPagination(db *gorm.DB, dto QueryDTO) *gorm.DB {
-	if dto == nil {
+func (r *Repository[T]) applyPagination(db *gorm.DB, cond *QueryCondition) *gorm.DB {
+	if cond == nil {
 		return db
 	}
-	return db.Limit(dto.Limit()).Offset(dto.Offset())
+	return db.Limit(cond.Limit()).Offset(cond.Offset())
 }
 
 // GetByID 根据 ID 查询
@@ -136,8 +136,8 @@ func (r *Repository[T]) GetByID(ctx context.Context, id int64) (*T, error) {
 	return &entity, nil
 }
 
-// List 列表查询（分页）
-func (r *Repository[T]) List(ctx context.Context, cond *QueryCondition, dto QueryDTO) ([]*T, int64, error) {
+// FindPage 分页查询
+func (r *Repository[T]) FindPage(ctx context.Context, cond *QueryCondition) ([]*T, int64, error) {
 	db := r.db.WithContext(ctx)
 	db = r.withSoftDelete(db)
 	db = r.applyCondition(db, cond)
@@ -150,7 +150,12 @@ func (r *Repository[T]) List(ctx context.Context, cond *QueryCondition, dto Quer
 	}
 
 	// 应用分页
-	db = r.applyPagination(db, dto)
+	db = r.applyPagination(db, cond)
+
+	// 应用分页排序
+	if cond != nil {
+		db = db.Order(cond.GetSortBy() + " " + cond.GetSortOrder())
+	}
 
 	// 查询
 	var list []*T

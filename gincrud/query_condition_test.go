@@ -116,16 +116,69 @@ func TestQueryCondition_OrderBy(t *testing.T) {
 	assert.Equal(t, "id", orderBy[1].Field)
 }
 
+func TestQueryCondition_Page(t *testing.T) {
+	q := NewQuery()
+	q.Page(3)
+	assert.Equal(t, 3, q.GetPage())
+}
+
+func TestQueryCondition_PageSize(t *testing.T) {
+	q := NewQuery()
+	q.PageSize(25)
+	assert.Equal(t, 25, q.GetPageSize())
+}
+
+func TestQueryCondition_PageDefaults(t *testing.T) {
+	q := NewQuery()
+	assert.Equal(t, 1, q.GetPage(), "Default page should 1")
+	assert.Equal(t, 10, q.GetPageSize(), "Default page size should be 10")
+}
+
+func TestQueryCondition_PageSizeLimits(t *testing.T) {
+	q := NewQuery()
+	q.PageSize(0)
+	assert.Equal(t, 10, q.GetPageSize(), "Page size less than 1 should default to 10")
+
+	q.PageSize(150)
+	assert.Equal(t, 100, q.GetPageSize(), "Page size greater than 100 should be capped at 100")
+}
+
+func TestQueryCondition_Sort(t *testing.T) {
+	q := NewQuery()
+	q.Sort("created_at", "asc")
+	assert.Equal(t, "created_at", q.GetSortBy())
+	assert.Equal(t, "asc", q.GetSortOrder())
+}
+
+func TestQueryCondition_SortDefaults(t *testing.T) {
+	q := NewQuery()
+	assert.Equal(t, "id", q.GetSortBy(), "Default sort by should be 'id'")
+	assert.Equal(t, "desc", q.GetSortOrder(), "Default sort order should be 'desc'")
+}
+
+func TestQueryCondition_OffsetCalculation(t *testing.T) {
+	q := NewQuery()
+	q.Page(1).PageSize(10)
+	assert.Equal(t, 0, q.Offset(), "Offset for page 1 should be 0")
+
+	q.Page(3).PageSize(10)
+	assert.Equal(t, 20, q.Offset(), "Offset for page 3 with size 10 should be 20")
+
+	q.Page(5).PageSize(20)
+	assert.Equal(t, 80, q.Offset(), "Offset for page 5 with size 20 should be 80")
+}
+
 func TestQueryCondition_Limit(t *testing.T) {
 	q := NewQuery()
-	q.Limit(10)
-	assert.Equal(t, 10, q.GetLimit())
+	q.PageSize(10)
+	assert.Equal(t, 10, q.GetPageSize())
 }
 
 func TestQueryCondition_Offset(t *testing.T) {
 	q := NewQuery()
-	q.Offset(20)
-	assert.Equal(t, 20, q.GetOffset())
+	q.Page(3)
+	q.PageSize(10)
+	assert.Equal(t, 20, q.Offset())
 }
 
 func TestQueryCondition_Chain(t *testing.T) {
@@ -133,14 +186,14 @@ func TestQueryCondition_Chain(t *testing.T) {
 	q.WhereEq("status", 1).
 		WhereLike("name", "%test%").
 		OrderBy("id", true).
-		Limit(10).
-		Offset(0)
+		Page(1).
+		PageSize(10)
 
 	assert.Len(t, q.GetWhereEq(), 1)
 	assert.Len(t, q.GetWhereLike(), 1)
 	assert.Len(t, q.GetOrderBy(), 1)
-	assert.Equal(t, 10, q.GetLimit())
-	assert.Equal(t, 0, q.GetOffset())
+	assert.Equal(t, 10, q.GetPageSize())
+	assert.Equal(t, 1, q.GetPage())
 }
 
 func TestQueryCondition_AllConditions(t *testing.T) {
@@ -158,8 +211,8 @@ func TestQueryCondition_AllConditions(t *testing.T) {
 		WhereNotNull("email").
 		Preload("Posts").
 		OrderBy("created_at", true).
-		Limit(10).
-		Offset(0)
+		Page(1).
+		PageSize(10)
 
 	assert.Len(t, q.GetWhereEq(), 1)
 	assert.Len(t, q.GetWhereNe(), 1)
@@ -174,6 +227,6 @@ func TestQueryCondition_AllConditions(t *testing.T) {
 	assert.Len(t, q.GetWhereNotNull(), 1)
 	assert.Len(t, q.GetPreloads(), 1)
 	assert.Len(t, q.GetOrderBy(), 1)
-	assert.Equal(t, 10, q.GetLimit())
-	assert.Equal(t, 0, q.GetOffset())
+	assert.Equal(t, 10, q.GetPageSize())
+	assert.Equal(t, 1, q.GetPage())
 }
