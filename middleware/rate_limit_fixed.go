@@ -51,7 +51,7 @@ func RateLimitFixed(client RedisClient, cfg RateLimitFixedConfig) gin.HandlerFun
 		}
 
 		if !allowed {
-			RespondError(c, RateLimitErrExceeded)
+			RespondErrorWithCode(c, ErrRateLimitExceeded)
 			c.Abort()
 			return
 		}

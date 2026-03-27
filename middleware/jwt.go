@@ -40,7 +40,7 @@ func JwtAuth(cfg JwtConfig, claimsFunc JwtClaimsFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr := c.GetHeader(cfg.TokenHeader)
 		if tokenStr == "" {
-			RespondError(c, JwtErrMissingToken)
+			RespondErrorWithCode(c, ErrMissingToken)
 			c.Abort()
 			return
 		}
@@ -63,19 +63,19 @@ func JwtAuth(cfg JwtConfig, claimsFunc JwtClaimsFunc) gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			RespondError(c, JwtErrInvalidToken)
+			RespondErrorWithCode(c, ErrInvalidToken)
 			c.Abort()
 			return
 		}
 
 		if cfg.Validator != nil {
 			if !cfg.Validator.ValidateToken(c, claims) {
-				RespondError(c, JwtErrTokenBlocked)
+				RespondErrorWithCode(c, ErrTokenBlocked)
 				c.Abort()
 				return
 			}
 			if !cfg.Validator.GetUser(c, claims) {
-				RespondError(c, JwtErrUserNotFound)
+				RespondErrorWithCode(c, ErrUserNotFound)
 				c.Abort()
 				return
 			}

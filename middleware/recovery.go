@@ -28,15 +28,10 @@ func RecoveryMiddleware(cfg RecoveryMiddlewareConfig) gin.HandlerFunc {
 						"stack", string(debug.Stack()),
 					)
 				}
-				RespondError(c, StdErrInternalServer)
+				RespondErrorWithCode(c, ErrInternalServer)
 				c.Abort()
 			}
 		}()
 		c.Next()
 	}
-}
-
-// RespondError 返回错误响应的便捷函数
-func RespondError(c *gin.Context, err ErrorCode) {
-	RespondErrorWithCode(c, err)
 }

@@ -4,5 +4,5 @@ import "github.com/io-max/go-lib/middleware"
 
 // 日志预定义错误码
 var (
-	LogErrInitFailed = middleware.NewCode(500201, "Failed to initialize logger")
+	LogErrInitFailed = middleware.NewCode(500301, "Failed to initialize logger")
 )

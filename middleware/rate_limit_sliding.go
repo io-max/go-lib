@@ -38,7 +38,7 @@ func RateLimitSliding(client RedisClient, cfg RateLimitSlidingConfig) gin.Handle
 		}
 
 		if !allowed {
-			RespondError(c, RateLimitErrExceeded)
+			RespondErrorWithCode(c, ErrRateLimitExceeded)
 			c.Abort()
 			return
 		}

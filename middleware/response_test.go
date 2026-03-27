@@ -12,9 +12,9 @@ import (
 )
 
 func TestNewCode(t *testing.T) {
-	err := NewCode(400001, "Invalid parameter")
-	assert.Equal(t, 400001, err.Code())
-	assert.Equal(t, "Invalid parameter", err.Message())
+	err := NewCode(800001, "Test error")
+	assert.Equal(t, 800001, err.Code())
+	assert.Equal(t, "Test error", err.Message())
 }
 
 func TestNewCodeDuplicate(t *testing.T) {
@@ -83,12 +83,12 @@ func TestRespondErrorWithCode(t *testing.T) {
 
 	c.Set(RequestIDKey, "test-trace-id-err-001")
 
-	errCode := NewCode(400101, "Bad Request Error")
+	errCode := NewCode(400801, "Test Bad Request Error")
 	RespondErrorWithCode(c, errCode)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":400101`)
-	assert.Contains(t, w.Body.String(), `"message":"Bad Request Error"`)
+	assert.Contains(t, w.Body.String(), `"code":400801`)
+	assert.Contains(t, w.Body.String(), `"message":"Test Bad Request Error"`)
 	assert.Contains(t, w.Body.String(), `"trace_id":"test-trace-id-err-001"`)
 }
 
@@ -99,12 +99,12 @@ func TestRespondErrorWithMessage(t *testing.T) {
 
 	c.Set(RequestIDKey, "test-trace-id-err-002")
 
-	errCode := NewCode(400102, "Original Error")
+	errCode := NewCode(400802, "Original Error")
 	customMessage := "Custom error message"
 	RespondErrorWithMessage(c, errCode, customMessage)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":400102`)
+	assert.Contains(t, w.Body.String(), `"code":400802`)
 	assert.Contains(t, w.Body.String(), `"message":"Custom error message"`)
 }
 
@@ -115,11 +115,11 @@ func TestRespondErrorWithFormat(t *testing.T) {
 
 	c.Set(RequestIDKey, "test-trace-id-err-003")
 
-	errCode := NewCode(400103, "Template Error")
+	errCode := NewCode(400803, "Template Error")
 	RespondErrorWithFormat(c, errCode, "User %s not found, ID: %d", "john", 42)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":400103`)
+	assert.Contains(t, w.Body.String(), `"code":400803`)
 	assert.Contains(t, w.Body.String(), `"message":"User john not found, ID: 42"`)
 }
 
@@ -130,11 +130,11 @@ func TestRespondErrorWithHTTPStatus(t *testing.T) {
 
 	c.Set(RequestIDKey, "test-trace-id-err-004")
 
-	errCode := NewCode(404999, "Resource Not Found")
+	errCode := NewCode(400804, "Resource Not Found")
 	RespondErrorWithHTTPStatus(c, http.StatusNotFound, errCode)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":404999`)
+	assert.Contains(t, w.Body.String(), `"code":400804`)
 	assert.Contains(t, w.Body.String(), `"message":"Resource Not Found"`)
 }
 
@@ -146,11 +146,11 @@ func TestRespondErrorWithDetails(t *testing.T) {
 	c.Set(RequestIDKey, "test-trace-id-err-005")
 
 	originalErr := errors.New("database connection failed")
-	errCode := NewCode(500101, "Internal Server Error")
+	errCode := NewCode(500801, "Internal Server Error")
 	RespondErrorWithDetails(c, originalErr, errCode)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), `"code":500101`)
+	assert.Contains(t, w.Body.String(), `"code":500801`)
 	assert.Contains(t, w.Body.String(), `"message":"Internal Server Error"`)
 	assert.Contains(t, w.Body.String(), `"error":"database connection failed"`)
 }
