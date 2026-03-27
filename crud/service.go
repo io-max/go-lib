@@ -226,3 +226,95 @@ func (s *Service[T, O, Q, R]) BatchDelete(ctx context.Context, ids []int64) erro
 func (s *Service[T, O, Q, R]) DeleteByIDs(ctx context.Context, ids []int64) error {
 	return s.repo.DeleteByIDs(ctx, ids)
 }
+
+// =============================================================================
+// 查询
+// =============================================================================
+
+// GetOne 获取单个
+func (s *Service[T, O, Q, R]) GetOne(ctx context.Context, query Q) (R, error) {
+	var zero R
+
+	cond := s.queryToCond(query)
+	entity, err := s.repo.FindFirst(ctx, cond)
+	if err != nil {
+		return zero, err
+	}
+
+	return s.entityToRes(entity)
+}
+
+// List 列表查询
+func (s *Service[T, O, Q, R]) List(ctx context.Context, query Q) ([]R, error) {
+	cond := s.queryToCond(query)
+	entities, err := s.repo.Find(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []R
+	for _, entity := range entities {
+		res, err := s.entityToRes(entity)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, res)
+	}
+
+	return results, nil
+}
+
+// Page 分页查询
+func (s *Service[T, O, Q, R]) Page(ctx context.Context, query Q) (*PageResult[R], error) {
+	cond := s.queryToCond(query)
+	entities, total, err := s.repo.FindPage(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []R
+	for _, entity := range entities {
+		res, err := s.entityToRes(entity)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, res)
+	}
+
+	return &PageResult[R]{
+		List:  results,
+		Total: total,
+	}, nil
+}
+
+// Count 计数
+func (s *Service[T, O, Q, R]) Count(ctx context.Context, query Q) (int64, error) {
+	cond := s.queryToCond(query)
+	return s.repo.Count(ctx, cond)
+}
+
+// Exists 检查是否存在
+func (s *Service[T, O, Q, R]) Exists(ctx context.Context, query Q) (bool, error) {
+	cond := s.queryToCond(query)
+	count, err := s.repo.Count(ctx, cond)
+	return count > 0, err
+}
+
+// GetByIDs 根据 IDs 批量获取
+func (s *Service[T, O, Q, R]) GetByIDs(ctx context.Context, ids []int64) ([]R, error) {
+	entities, err := s.repo.FindByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []R
+	for _, entity := range entities {
+		res, err := s.entityToRes(entity)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, res)
+	}
+
+	return results, nil
+}
