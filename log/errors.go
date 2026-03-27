@@ -1,6 +1,6 @@
 package log
 
-import "github.com/your-org/go-lib/middleware"
+import "github.com/io-max/go-lib/middleware"
 
 // 日志预定义错误码
 var (

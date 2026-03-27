@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/your-org/go-lib/log"
-	"github.com/your-org/go-lib/middleware"
+	"github.com/io-max/go-lib/log"
+	"github.com/io-max/go-lib/middleware"
 )
 
 func main() {

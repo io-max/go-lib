@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/your-org/go-lib/gincrud"
+	"github.com/io-max/go-lib/gincrud"
 	"gorm.io/gorm"
 )
 

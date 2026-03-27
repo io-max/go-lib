@@ -1234,7 +1234,7 @@ Create `examples/repository/models.go`:
 ```go
 package repository
 
-import "github.com/your-org/go-lib/gincrud"
+import "github.com/io-max/go-lib/gincrud"
 
 // User 用户模型
 type User struct {
@@ -1268,7 +1268,7 @@ package repository
 
 import (
 	"context"
-	"github.com/your-org/go-lib/gincrud"
+	"github.com/io-max/go-lib/gincrud"
 	"gorm.io/gorm"
 )
 

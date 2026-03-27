@@ -26,7 +26,7 @@
 **Step 1: 创建 go.mod**
 
 ```go
-module github.com/your-org/go-lib
+module github.com/io-max/go-lib
 
 go 1.21
 

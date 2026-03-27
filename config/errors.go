@@ -1,6 +1,6 @@
 package config
 
-import "github.com/your-org/go-lib/middleware"
+import "github.com/io-max/go-lib/middleware"
 
 // 配置预定义错误码
 var (

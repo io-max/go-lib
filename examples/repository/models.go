@@ -1,6 +1,6 @@
 package repository
 
-import "github.com/your-org/go-lib/gincrud"
+import "github.com/io-max/go-lib/gincrud"
 
 // User 用户模型
 type User struct {
