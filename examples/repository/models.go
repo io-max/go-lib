@@ -1,10 +1,10 @@
 package repository
 
-import "github.com/io-max/go-lib/gincrud"
+import "github.com/io-max/go-lib/crud"
 
 // User 用户模型
 type User struct {
-	*gincrud.BaseEntity
+	*crud.BaseEntity
 	Username string `gorm:"uniqueIndex;size:50" json:"username"`
 	Email    string `gorm:"uniqueIndex;size:100" json:"email"`
 	Password string `gorm:"size:255" json:"-"`
@@ -13,21 +13,21 @@ type User struct {
 }
 
 func NewUser() *User {
-	return &User{BaseEntity: &gincrud.BaseEntity{}}
+	return &User{BaseEntity: &crud.BaseEntity{}}
 }
 
 func (User) TableName() string { return "users" }
 
 // Post 文章模型
 type Post struct {
-	*gincrud.BaseEntity
+	*crud.BaseEntity
 	Title   string `json:"title"`
 	Content string `json:"content"`
 	UserID  int64  `json:"user_id"`
 }
 
 func NewPost() *Post {
-	return &Post{BaseEntity: &gincrud.BaseEntity{}}
+	return &Post{BaseEntity: &crud.BaseEntity{}}
 }
 
 func (Post) TableName() string { return "posts" }

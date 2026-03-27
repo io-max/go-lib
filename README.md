@@ -63,7 +63,7 @@ go-lib/
 ├── middleware/    # Gin 中间件
 ├── config/        # Viper 配置
 ├── log/           # Zap 日志
-├── gincrud/       # CRUD 基础类型
+├── crud/          # CRUD 基础类型
 └── examples/      # 示例代码
 ```
 
@@ -73,14 +73,14 @@ go-lib/
 
 ```go
 type User struct {
-    gincrud.BaseEntity
+    crud.BaseEntity
     Username string `json:"username"`
     Email    string `json:"email"`
 }
 
 func main() {
     db := initDB()
-    repo := gincrud.NewRepository[User](db)
+    repo := crud.NewRepository[User](db)
 
     // 创建
     user := &User{Username: "alice", Email: "alice@example.com"}
@@ -94,7 +94,7 @@ func main() {
     users, _ := repo.FindByIDs(ctx, ids)
 
     // 条件查询
-    cond := gincrud.NewQuery().
+    cond := crud.NewQuery().
         WhereEq("status", 1).
         WhereLike("username", "%admin%").
         OrderBy("created_at", true).
@@ -109,12 +109,12 @@ func main() {
 
 ```go
 type UserRepository struct {
-    *gincrud.Repository[User]
+    *crud.Repository[User]
 }
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
     return &UserRepository{
-        Repository: gincrud.NewRepository[User](db),
+        Repository: crud.NewRepository[User](db),
     }
 }
 

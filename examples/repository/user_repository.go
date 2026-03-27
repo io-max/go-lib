@@ -3,19 +3,19 @@ package repository
 import (
 	"context"
 
-	"github.com/io-max/go-lib/gincrud"
+	"github.com/io-max/go-lib/crud"
 	"gorm.io/gorm"
 )
 
 // UserRepository 用户数据访问层
 type UserRepository struct {
-	*gincrud.Repository[User]
+	*crud.Repository[User]
 }
 
 // NewUserRepository 创建 UserRepository
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{
-		Repository: gincrud.NewRepository[User](db),
+		Repository: crud.NewRepository[User](db),
 	}
 }
 
