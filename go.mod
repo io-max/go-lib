@@ -1,4 +1,4 @@
-module github.com/your-org/go-lib
+module codeup.aliyun.com/io-max/go-lib
 
 go 1.25.0
 
