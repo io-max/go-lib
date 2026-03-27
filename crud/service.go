@@ -32,3 +32,21 @@ type IService[T Entity, O any, Q any, R any] interface {
 	DB() *gorm.DB
 	Repository() IRepository[T]
 }
+
+// ServiceConfig Service 配置
+type ServiceConfig[T Entity, O any, Q any, R any] struct {
+	// OptDTO → Entity 转换（Create + Update 共用）
+	DtoToEntity func(*O) (*T, error)
+
+	// Entity → Response 转换
+	EntityToRes func(*T) (R, error)
+
+	// Query DTO → QueryCondition 转换
+	QueryToCond func(Q) *QueryCondition
+
+	// 可选：Update 前钩子
+	BeforeUpdate func(ctx context.Context, dto *O, entity *T) error
+
+	// 可选：Create 前钩子
+	BeforeCreate func(ctx context.Context, dto *O, entity *T) error
+}
