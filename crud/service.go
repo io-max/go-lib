@@ -50,3 +50,50 @@ type ServiceConfig[T Entity, O any, Q any, R any] struct {
 	// 可选：Create 前钩子
 	BeforeCreate func(ctx context.Context, dto *O, entity *T) error
 }
+
+// Service 基础服务层（泛型版本）
+type Service[T Entity, O any, Q any, R any] struct {
+	repo IRepository[T]
+
+	// 转换函数
+	dtoToEntity func(*O) (*T, error)
+	entityToRes func(*T) (R, error)
+	queryToCond func(Q) *QueryCondition
+
+	// 钩子
+	beforeUpdate func(ctx context.Context, dto *O, entity *T) error
+	beforeCreate func(ctx context.Context, dto *O, entity *T) error
+}
+
+// NewService 创建 Service
+func NewService[T Entity, O any, Q any, R any](
+	repo IRepository[T],
+	cfg ServiceConfig[T, O, Q, R],
+) *Service[T, O, Q, R] {
+	return &Service[T, O, Q, R]{
+		repo:         repo,
+		dtoToEntity:  cfg.DtoToEntity,
+		entityToRes:  cfg.EntityToRes,
+		queryToCond:  cfg.QueryToCond,
+		beforeUpdate: cfg.BeforeUpdate,
+		beforeCreate: cfg.BeforeCreate,
+	}
+}
+
+// NewServiceWithDB 使用 DB 创建 Service
+func NewServiceWithDB[T Entity, O any, Q any, R any](
+	db *gorm.DB,
+	cfg ServiceConfig[T, O, Q, R],
+) *Service[T, O, Q, R] {
+	return NewService(NewRepository[T](db), cfg)
+}
+
+// Repository 获取 Repository
+func (s *Service[T, O, Q, R]) Repository() IRepository[T] {
+	return s.repo
+}
+
+// DB 获取底层 DB
+func (s *Service[T, O, Q, R]) DB() *gorm.DB {
+	return s.repo.DB()
+}
