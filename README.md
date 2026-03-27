@@ -1,5 +1,9 @@
 # go-lib
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/io-max/go-lib.svg)](https://pkg.go.dev/github.com/io-max/go-lib)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/release/io-max/go-lib.svg)](https://github.com/io-max/go-lib/releases)
+
 Go 项目集成库，封装常用框架，减少重复代码。
 
 ## 特性
@@ -10,10 +14,10 @@ Go 项目集成库，封装常用框架，减少重复代码。
 - 📝 **Zap 日志**：JSON 格式、日志轮转、结构化输出
 - 🗄️ **CRUD 泛型**：Entity/QueryDTO/PageResult 基础类型
 
-## 快速开始
+## 安装
 
 ```bash
-go get github.com/your-org/go-lib
+go get github.com/io-max/go-lib
 ```
 
 ### 最简示例
@@ -23,8 +27,8 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/your-org/go-lib/middleware"
-    "github.com/your-org/go-lib/log"
+    "github.com/io-max/go-lib/middleware"
+    "github.com/io-max/go-lib/log"
 )
 
 func main() {
