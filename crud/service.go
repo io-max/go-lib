@@ -97,3 +97,75 @@ func (s *Service[T, O, Q, R]) Repository() IRepository[T] {
 func (s *Service[T, O, Q, R]) DB() *gorm.DB {
 	return s.repo.DB()
 }
+
+// =============================================================================
+// 基础 CRUD
+// =============================================================================
+
+// Create 创建
+func (s *Service[T, O, Q, R]) Create(ctx context.Context, dto *O) (R, error) {
+	var zero R
+
+	entity, err := s.dtoToEntity(dto)
+	if err != nil {
+		return zero, err
+	}
+
+	// Create 前钩子
+	if s.beforeCreate != nil {
+		if err := s.beforeCreate(ctx, dto, entity); err != nil {
+			return zero, err
+		}
+	}
+
+	if err := s.repo.Create(ctx, entity); err != nil {
+		return zero, err
+	}
+
+	return s.entityToRes(entity)
+}
+
+// GetByID 根据 ID 获取单个
+func (s *Service[T, O, Q, R]) GetByID(ctx context.Context, id int64) (R, error) {
+	var zero R
+
+	entity, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return zero, err
+	}
+
+	return s.entityToRes(entity)
+}
+
+// Update 更新
+func (s *Service[T, O, Q, R]) Update(ctx context.Context, dto *O) (R, error) {
+	var zero R
+
+	entity, err := s.dtoToEntity(dto)
+	if err != nil {
+		return zero, err
+	}
+
+	// Update 前钩子
+	if s.beforeUpdate != nil {
+		if err := s.beforeUpdate(ctx, dto, entity); err != nil {
+			return zero, err
+		}
+	}
+
+	if err := s.repo.Update(ctx, entity); err != nil {
+		return zero, err
+	}
+
+	return s.entityToRes(entity)
+}
+
+// Delete 删除（软删除）
+func (s *Service[T, O, Q, R]) Delete(ctx context.Context, id int64) error {
+	return s.repo.Delete(ctx, id)
+}
+
+// DeletePermanently 永久删除（硬删除）
+func (s *Service[T, O, Q, R]) DeletePermanently(ctx context.Context, id int64) error {
+	return s.repo.TrulyDelete(ctx, id)
+}
