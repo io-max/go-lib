@@ -6,6 +6,10 @@ import (
 )
 
 // IService 通用 Service 接口
+// T: 实体类型（如 *User）
+// O: 操作 DTO 类型（如 UserOptDTO）
+// Q: 查询 DTO 类型（如 UserQueryDTO）
+// R: 响应类型（如 UserResponse）
 type IService[T Entity, O any, Q any, R any] interface {
 	// 基础 CRUD
 	Create(ctx context.Context, dto *O) (R, error)
@@ -30,10 +34,14 @@ type IService[T Entity, O any, Q any, R any] interface {
 
 	// DB 访问
 	DB() *gorm.DB
-	Repository() IRepository[T]
+	Repository() *Repository[T]
 }
 
 // ServiceConfig Service 配置
+// T: 实体类型（如 *User）
+// O: 操作 DTO 类型（如 UserOptDTO）
+// Q: 查询 DTO 类型（如 UserQueryDTO）
+// R: 响应类型（如 UserResponse）
 type ServiceConfig[T Entity, O any, Q any, R any] struct {
 	// OptDTO → Entity 转换（Create + Update 共用）
 	DtoToEntity func(*O) (*T, error)
@@ -52,8 +60,12 @@ type ServiceConfig[T Entity, O any, Q any, R any] struct {
 }
 
 // Service 基础服务层（泛型版本）
+// T: 实体类型（如 *User）- 必须是指针类型且满足 Entity 接口
+// O: 操作 DTO 类型（如 UserOptDTO）
+// Q: 查询 DTO 类型（如 UserQueryDTO）
+// R: 响应类型（如 UserResponse）
 type Service[T Entity, O any, Q any, R any] struct {
-	repo IRepository[T]
+	repo *Repository[T]
 
 	// 转换函数
 	dtoToEntity func(*O) (*T, error)
@@ -67,7 +79,7 @@ type Service[T Entity, O any, Q any, R any] struct {
 
 // NewService 创建 Service
 func NewService[T Entity, O any, Q any, R any](
-	repo IRepository[T],
+	repo *Repository[T],
 	cfg ServiceConfig[T, O, Q, R],
 ) *Service[T, O, Q, R] {
 	return &Service[T, O, Q, R]{
@@ -89,7 +101,7 @@ func NewServiceWithDB[T Entity, O any, Q any, R any](
 }
 
 // Repository 获取 Repository
-func (s *Service[T, O, Q, R]) Repository() IRepository[T] {
+func (s *Service[T, O, Q, R]) Repository() *Repository[T] {
 	return s.repo
 }
 
@@ -208,11 +220,9 @@ func (s *Service[T, O, Q, R]) BatchUpdateByIDs(ctx context.Context, ids []int64,
 		return err
 	}
 
-	// 提取要更新的字段（排除 ID 等）
-	updates := map[string]any{}
-
-	// 这里需要根据实际 DTO 字段构建，简化处理
-	// 实际使用时用户可扩展此逻辑
+	// 简化处理：直接更新指定字段
+	// 实际使用时需要根据 DTO 构建 updates map
+	updates := make(map[string]any)
 
 	return s.repo.BatchUpdate(ctx, ids, updates)
 }
@@ -239,6 +249,9 @@ func (s *Service[T, O, Q, R]) GetOne(ctx context.Context, query Q) (R, error) {
 	entity, err := s.repo.FindFirst(ctx, cond)
 	if err != nil {
 		return zero, err
+	}
+	if entity == nil {
+		return zero, ErrRecordNotFound
 	}
 
 	return s.entityToRes(entity)
