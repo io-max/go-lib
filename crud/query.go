@@ -1,4 +1,4 @@
-package gincrud
+package crud
 
 // QueryDTO 查询参数接口
 type QueryDTO interface {

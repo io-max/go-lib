@@ -1,4 +1,4 @@
-package gincrud
+package crud
 
 // EqCond 等于条件
 type EqCond struct {

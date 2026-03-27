@@ -1,4 +1,4 @@
-package gincrud
+package crud
 
 // PageResult 分页响应
 type PageResult[T any] struct {

@@ -1,4 +1,4 @@
-package gincrud
+package crud
 
 import (
 	"context"
