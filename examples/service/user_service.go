@@ -35,9 +35,9 @@ type UserResponse struct {
 }
 
 // UserRepository User Repository 类型
-type UserRepository = *crud.Repository[*User]
+type UserRepository = *crud.Repository[User]
 
-// UserService 用户服务（简化版，不使用泛型 Service）
+// UserService 用户服务（基于 Repository 组合，不使用泛型 Service 基类）
 type UserService struct {
 	repo UserRepository
 	db   *gorm.DB
@@ -46,14 +46,14 @@ type UserService struct {
 // NewUserService 创建用户服务
 func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{
-		repo: crud.NewRepository[*User](db),
+		repo: crud.NewRepository[User](db),
 		db:   db,
 	}
 }
 
 // dtoToEntity DTO 转 Entity
-func dtoToEntity(dto *UserOptDTO) (*User, error) {
-	user := &User{}
+func dtoToEntity(dto *UserOptDTO) (User, error) {
+	user := User{}
 
 	// Update 场景
 	if dto.ID > 0 {
@@ -69,7 +69,7 @@ func dtoToEntity(dto *UserOptDTO) (*User, error) {
 	if dto.Password != "" {
 		hashed, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return nil, err
+			return User{}, err
 		}
 		user.Password = string(hashed)
 	}
@@ -81,12 +81,12 @@ func dtoToEntity(dto *UserOptDTO) (*User, error) {
 }
 
 // entityToResponse Entity 转 Response
-func entityToResponse(entity *User) UserResponse {
+func entityToResponse(user User) UserResponse {
 	return UserResponse{
-		ID:       entity.ID,
-		Username: entity.Username,
-		Email:    entity.Email,
-		Status:   entity.Status,
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		Status:   user.Status,
 	}
 }
 
@@ -200,7 +200,7 @@ func (s *UserService) ChangePassword(ctx context.Context, userID int64, newPassw
 		return err
 	}
 
-	(*user).Password = string(hashed)
+	user.Password = string(hashed)
 	return s.repo.Update(ctx, user)
 }
 
