@@ -22,9 +22,9 @@ type StandardErrorCode struct {
 	message string
 }
 
-func (e *StandardErrorCode) Code() int    { return e.code }
-func (e *StandardErrorCode) Message() string { return e.message }
-func (e *StandardErrorCode) Error() string { return fmt.Sprintf("code=%d, message=%s", e.code, e.message) }
+func (e *StandardErrorCode) Code() int         { return e.code }
+func (e *StandardErrorCode) Message() string   { return e.message }
+func (e *StandardErrorCode) Error() string     { return fmt.Sprintf("code=%d, message=%s", e.code, e.message) }
 
 // =============================================================================
 // 错误码工厂函数
@@ -36,23 +36,17 @@ var (
 	errorCodeMutex    sync.Mutex
 )
 
-// NewCode 创建标准错误码
-// 如果错误码已存在，会 panic
+// NewCode 创建标准错误码（供外部包创建自定义错误码）
 func NewCode(code int, message string) ErrorCode {
 	errorCodeMutex.Lock()
 	defer errorCodeMutex.Unlock()
 
 	if existingMsg, ok := errorCodeRegistry[code]; ok {
-		panic(fmt.Sprintf("duplicate error code %d: %s vs %s", code, existingMsg, message))
+		panic(fmt.Sprintf("duplicate error code %d: %s", code, existingMsg))
 	}
 	errorCodeRegistry[code] = message
 
 	return &StandardErrorCode{code: code, message: message}
-}
-
-// NewCodef 创建标准错误码（支持格式化消息）
-func NewCodef(code int, format string, args ...interface{}) ErrorCode {
-	return NewCode(code, fmt.Sprintf(format, args...))
 }
 
 // =============================================================================
@@ -70,12 +64,12 @@ var (
 // =============================================================================
 
 var (
-	ErrInvalidParam    = NewCode(400001, "Invalid parameter")
-	ErrUnauthorized    = NewCode(401001, "Unauthorized")
-	ErrForbidden       = NewCode(403001, "Forbidden")
-	ErrNotFound        = NewCode(404001, "Resource not found")
-	ErrConflict        = NewCode(409001, "Resource conflict")
-	ErrTooManyRequests = NewCode(429001, "Too many requests")
+	ErrInvalidParam      = NewCode(400001, "Invalid parameter")
+	ErrUnauthorized      = NewCode(401001, "Unauthorized")
+	ErrForbidden         = NewCode(403001, "Forbidden")
+	ErrNotFound          = NewCode(404001, "Resource not found")
+	ErrConflict          = NewCode(409001, "Resource conflict")
+	ErrTooManyRequests   = NewCode(429001, "Too many requests")
 )
 
 // =============================================================================
@@ -83,11 +77,11 @@ var (
 // =============================================================================
 
 var (
-	ErrMissingToken    = NewCode(401011, "Missing token")
-	ErrInvalidToken    = NewCode(401012, "Invalid token")
-	ErrTokenExpired    = NewCode(401013, "Token expired")
-	ErrTokenBlocked    = NewCode(401014, "Token has been blocked")
-	ErrUserNotFound    = NewCode(404002, "User not found")
+	ErrMissingToken   = NewCode(401011, "Missing token")
+	ErrInvalidToken   = NewCode(401012, "Invalid token")
+	ErrTokenExpired   = NewCode(401013, "Token expired")
+	ErrTokenBlocked   = NewCode(401014, "Token has been blocked")
+	ErrUserNotFound   = NewCode(404002, "User not found")
 )
 
 // =============================================================================
