@@ -98,10 +98,10 @@ func (r *Repository[T]) applyCondition(db *gorm.DB, cond *QueryCondition) *gorm.
 		db = db.Where(c.Field+" LIKE ?", c.Pattern)
 	}
 	for _, field := range cond.GetWhereNull() {
-		db = db.Where(field+" IS NULL")
+		db = db.Where(field + " IS NULL")
 	}
 	for _, field := range cond.GetWhereNotNull() {
-		db = db.Where(field+" IS NOT NULL")
+		db = db.Where(field + " IS NOT NULL")
 	}
 	for _, order := range cond.GetOrderBy() {
 		if order.Desc {
@@ -136,7 +136,6 @@ func (r *Repository[T]) applyPagination(db *gorm.DB, cond *QueryCondition) *gorm
 // FindByID 根据 ID 查询（原 GetByID）
 func (r *Repository[T]) FindByID(ctx context.Context, id int64) (*T, error) {
 	var entity T
-	entity.SetID(id)
 
 	db := r.db.WithContext(ctx)
 	db = r.withSoftDelete(db)
@@ -147,6 +146,7 @@ func (r *Repository[T]) FindByID(ctx context.Context, id int64) (*T, error) {
 		}
 		return nil, err
 	}
+
 	return &entity, nil
 }
 
