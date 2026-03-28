@@ -17,10 +17,12 @@ type QueryDTO interface {
 
 // BaseQueryDTO 基础查询参数
 type BaseQueryDTO struct {
-	Page      int    `form:"page"`
-	PageSize  int    `form:"page_size"`
-	SortBy    string `form:"sort_by"`
-	SortOrder string `form:"sort_order"`
+	Page      int     `form:"page" json:"page"`
+	PageSize  int     `form:"page_size" json:"page_size"`
+	SortBy    string  `form:"sort_by" json:"sort_by"`
+	SortOrder string  `form:"sort_order" json:"sort_order"`
+	Keyword   string  `form:"keyword" json:"keyword"`
+	IDs       []int64 `form:"ids" json:"ids"`
 }
 
 func (q *BaseQueryDTO) GetPage() int              { return q.Page }
