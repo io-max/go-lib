@@ -9,8 +9,9 @@ import (
 // ErrorCode 接口定义
 // =============================================================================
 
-// ErrorCode 错误码接口
+// ErrorCode 错误码接口（同时满足 error 接口）
 type ErrorCode interface {
+	error
 	Code() int
 	Message() string
 }
@@ -23,6 +24,7 @@ type StandardErrorCode struct {
 
 func (e *StandardErrorCode) Code() int    { return e.code }
 func (e *StandardErrorCode) Message() string { return e.message }
+func (e *StandardErrorCode) Error() string { return fmt.Sprintf("code=%d, message=%s", e.code, e.message) }
 
 // =============================================================================
 // 错误码工厂函数
