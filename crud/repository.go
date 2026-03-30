@@ -92,7 +92,7 @@ func (r *Repository[T]) applyCondition(db *gorm.DB, cond *QueryCondition) *gorm.
 		db = db.Where(c.Field+" BETWEEN ? AND ?", c.Min, c.Max)
 	}
 	for _, c := range cond.GetWhereIn() {
-		db = db.Where(c.Field+" IN ?", c.Values)
+		db = db.Where(c.Field+" IN ?", c.Values...)
 	}
 	for _, c := range cond.GetWhereLike() {
 		db = db.Where(c.Field+" LIKE ?", c.Pattern)
