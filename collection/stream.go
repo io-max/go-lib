@@ -16,3 +16,11 @@ func (s *Stream[T]) Collect() []T {
 	copy(result, s.data)
 	return result
 }
+
+func Map[T, U any](s *Stream[T], fn func(T) U) *Stream[U] {
+	result := make([]U, len(s.data))
+	for i, item := range s.data {
+		result[i] = fn(item)
+	}
+	return &Stream[U]{data: result}
+}

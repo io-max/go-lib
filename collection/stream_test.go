@@ -2,6 +2,11 @@ package collection
 
 import "testing"
 
+type User struct {
+	ID   int64
+	Name string
+}
+
 func TestOf(t *testing.T) {
 	// nil 输入
 	s1 := Of([]int(nil))
@@ -21,5 +26,14 @@ func TestOf(t *testing.T) {
 		if result[i] != v {
 			t.Errorf("expected result[%d]=%d, got %d", i, v, result[i])
 		}
+	}
+}
+
+func TestMap(t *testing.T) {
+	users := []User{{ID: 1, Name: "a"}, {ID: 2, Name: "b"}}
+	ids := Map(Of(users), func(u User) int64 { return u.ID }).Collect()
+
+	if len(ids) != 2 || ids[0] != 1 || ids[1] != 2 {
+		t.Errorf("expected [1 2], got %v", ids)
 	}
 }
