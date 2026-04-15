@@ -29,6 +29,21 @@ func TestOf(t *testing.T) {
 	}
 }
 
+func TestFilter(t *testing.T) {
+	nums := []int{1, 2, 3, 4, 5}
+	evens := Of(nums).Filter(func(n int) bool { return n%2 == 0 }).Collect()
+	if len(evens) != 2 || evens[0] != 2 || evens[1] != 4 {
+		t.Errorf("expected [2 4], got %v", evens)
+	}
+}
+
+func TestFilterWithNil(t *testing.T) {
+	evens := Of([]int(nil)).Filter(func(n int) bool { return n%2 == 0 }).Collect()
+	if len(evens) != 0 {
+		t.Errorf("expected [], got %v", evens)
+	}
+}
+
 func TestMap(t *testing.T) {
 	users := []User{{ID: 1, Name: "a"}, {ID: 2, Name: "b"}}
 	ids := Map(Of(users), func(u User) int64 { return u.ID }).Collect()
