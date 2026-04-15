@@ -60,3 +60,19 @@ func TestFlatMap(t *testing.T) {
 		t.Errorf("expected [1 2 3 4 5], got %v", flat)
 	}
 }
+
+func TestDistinct(t *testing.T) {
+	nums := []int{1, 2, 2, 3, 3, 3}
+	distinct := Of(nums).Distinct().Collect()
+	if len(distinct) != 3 {
+		t.Errorf("expected 3 distinct elements, got %v", distinct)
+	}
+}
+
+func TestDistinctWithComparer(t *testing.T) {
+	users := []User{{ID: 1, Name: "a"}, {ID: 1, Name: "b"}, {ID: 2, Name: "c"}}
+	distinct := Distinct(Of(users), func(a, b User) bool { return a.ID == b.ID }).Collect()
+	if len(distinct) != 2 {
+		t.Errorf("expected 2 distinct users by ID, got %v", distinct)
+	}
+}
