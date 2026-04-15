@@ -1,6 +1,9 @@
 package collection
 
-import "reflect"
+import (
+	"reflect"
+	"sort"
+)
 
 type Stream[T any] struct {
 	executor func() []T
@@ -172,4 +175,56 @@ func (s *Stream[T]) AllMatch(pred func(T) bool) bool {
 
 func (s *Stream[T]) NoneMatch(pred func(T) bool) bool {
 	return !s.AnyMatch(pred)
+}
+
+func (s *Stream[T]) Limit(n int) *Stream[T] {
+	if n <= 0 {
+		return Of([]T{})
+	}
+	return &Stream[T]{
+		data: nil,
+		executor: func() []T {
+			result := []T{}
+			for i, item := range s.Collect() {
+				if i >= n {
+					break
+				}
+				result = append(result, item)
+			}
+			return result
+		},
+	}
+}
+
+func (s *Stream[T]) Skip(n int) *Stream[T] {
+	if n <= 0 {
+		return s
+	}
+	return &Stream[T]{
+		data: nil,
+		executor: func() []T {
+			result := []T{}
+			for i, item := range s.Collect() {
+				if i >= n {
+					result = append(result, item)
+				}
+			}
+			return result
+		},
+	}
+}
+
+func (s *Stream[T]) Sorted(less func(T, T) bool) *Stream[T] {
+	return &Stream[T]{
+		data: nil,
+		executor: func() []T {
+			data := s.Collect()
+			sorted := make([]T, len(data))
+			copy(sorted, data)
+			sort.Slice(sorted, func(i, j int) bool {
+				return less(sorted[i], sorted[j])
+			})
+			return sorted
+		},
+	}
 }

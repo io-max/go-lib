@@ -138,3 +138,38 @@ func TestNoneMatch(t *testing.T) {
 		t.Errorf("expected false")
 	}
 }
+
+func TestLimit(t *testing.T) {
+	limited := Of([]int{1, 2, 3, 4, 5}).Limit(3).Collect()
+	if len(limited) != 3 {
+		t.Errorf("expected 3 elements, got %v", limited)
+	}
+}
+
+func TestLimitWithZero(t *testing.T) {
+	limited := Of([]int{1, 2, 3}).Limit(0).Collect()
+	if len(limited) != 0 {
+		t.Errorf("expected empty, got %v", limited)
+	}
+}
+
+func TestSkip(t *testing.T) {
+	skipped := Of([]int{1, 2, 3, 4, 5}).Skip(2).Collect()
+	if len(skipped) != 3 {
+		t.Errorf("expected 3 elements, got %v", skipped)
+	}
+}
+
+func TestSkipMoreThanLength(t *testing.T) {
+	skipped := Of([]int{1, 2, 3}).Skip(10).Collect()
+	if len(skipped) != 0 {
+		t.Errorf("expected empty, got %v", skipped)
+	}
+}
+
+func TestSorted(t *testing.T) {
+	sorted := Of([]int{3, 1, 2}).Sorted(func(a, b int) bool { return a < b }).Collect()
+	if sorted[0] != 1 || sorted[1] != 2 || sorted[2] != 3 {
+		t.Errorf("expected [1 2 3], got %v", sorted)
+	}
+}
