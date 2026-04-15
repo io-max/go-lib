@@ -59,3 +59,16 @@ func Map[T, U any](s *Stream[T], fn func(T) U) *Stream[U] {
 		executor: executor,
 	}
 }
+
+func FlatMap[T, U any](s *Stream[T], fn func(T) []U) *Stream[U] {
+	return &Stream[U]{
+		data: nil,
+		executor: func() []U {
+			result := []U{}
+			for _, item := range s.Collect() {
+				result = append(result, fn(item)...)
+			}
+			return result
+		},
+	}
+}

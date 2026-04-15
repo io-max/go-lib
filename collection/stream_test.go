@@ -52,3 +52,11 @@ func TestMap(t *testing.T) {
 		t.Errorf("expected [1 2], got %v", ids)
 	}
 }
+
+func TestFlatMap(t *testing.T) {
+	nested := [][]int{{1, 2}, {3, 4}, {5}}
+	flat := FlatMap(Of(nested), func(s []int) []int { return s }).Collect()
+	if len(flat) != 5 || flat[0] != 1 || flat[4] != 5 {
+		t.Errorf("expected [1 2 3 4 5], got %v", flat)
+	}
+}
