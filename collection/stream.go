@@ -131,3 +131,45 @@ func (s *Stream[T]) Peek(fn func(T)) *Stream[T] {
 		},
 	}
 }
+
+func (s *Stream[T]) Count() int {
+	return len(s.Collect())
+}
+
+func (s *Stream[T]) Reduce(initial T, fn func(T, T) T) T {
+	result := initial
+	for _, item := range s.Collect() {
+		result = fn(result, item)
+	}
+	return result
+}
+
+func (s *Stream[T]) FindFirst() (T, bool) {
+	data := s.Collect()
+	if len(data) == 0 {
+		return *new(T), false
+	}
+	return data[0], true
+}
+
+func (s *Stream[T]) AnyMatch(pred func(T) bool) bool {
+	for _, item := range s.Collect() {
+		if pred(item) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Stream[T]) AllMatch(pred func(T) bool) bool {
+	for _, item := range s.Collect() {
+		if !pred(item) {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *Stream[T]) NoneMatch(pred func(T) bool) bool {
+	return !s.AnyMatch(pred)
+}

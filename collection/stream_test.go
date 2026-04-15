@@ -85,3 +85,56 @@ func TestPeek(t *testing.T) {
 		t.Errorf("expected [1 2 3], got %v", peeked)
 	}
 }
+
+func TestCount(t *testing.T) {
+	count := Of([]int{1, 2, 3, 4, 5}).Count()
+	if count != 5 {
+		t.Errorf("expected 5, got %d", count)
+	}
+}
+
+func TestReduce(t *testing.T) {
+	sum := Of([]int{1, 2, 3, 4}).Reduce(0, func(acc, n int) int { return acc + n })
+	if sum != 10 {
+		t.Errorf("expected 10, got %d", sum)
+	}
+}
+
+func TestFindFirst(t *testing.T) {
+	first, ok := Of([]int{1, 2, 3}).Filter(func(n int) bool { return n%2 == 0 }).FindFirst()
+	if !ok || first != 2 {
+		t.Errorf("expected (2, true), got (%d, %v)", first, ok)
+	}
+
+	_, ok = Of([]int{1, 3, 5}).Filter(func(n int) bool { return n%2 == 0 }).FindFirst()
+	if ok {
+		t.Errorf("expected (0, false), got (%v)", ok)
+	}
+}
+
+func TestAnyMatch(t *testing.T) {
+	if !Of([]int{1, 2, 3}).AnyMatch(func(n int) bool { return n == 2 }) {
+		t.Errorf("expected true")
+	}
+	if Of([]int{1, 2, 3}).AnyMatch(func(n int) bool { return n == 5 }) {
+		t.Errorf("expected false")
+	}
+}
+
+func TestAllMatch(t *testing.T) {
+	if !Of([]int{1, 2, 3}).AllMatch(func(n int) bool { return n > 0 }) {
+		t.Errorf("expected true")
+	}
+	if Of([]int{1, 2, 3}).AllMatch(func(n int) bool { return n > 1 }) {
+		t.Errorf("expected false")
+	}
+}
+
+func TestNoneMatch(t *testing.T) {
+	if !Of([]int{1, 2, 3}).NoneMatch(func(n int) bool { return n > 10 }) {
+		t.Errorf("expected true")
+	}
+	if Of([]int{1, 2, 3}).NoneMatch(func(n int) bool { return n == 2 }) {
+		t.Errorf("expected false")
+	}
+}
