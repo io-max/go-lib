@@ -118,3 +118,16 @@ func Distinct[T any](s *Stream[T], eq func(T, T) bool) *Stream[T] {
 		},
 	}
 }
+
+func (s *Stream[T]) Peek(fn func(T)) *Stream[T] {
+	return &Stream[T]{
+		data: nil,
+		executor: func() []T {
+			result := s.Collect()
+			for _, item := range result {
+				fn(item)
+			}
+			return result
+		},
+	}
+}

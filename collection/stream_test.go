@@ -76,3 +76,12 @@ func TestDistinctWithComparer(t *testing.T) {
 		t.Errorf("expected 2 distinct users by ID, got %v", distinct)
 	}
 }
+
+func TestPeek(t *testing.T) {
+	var peeked []int
+	nums := []int{1, 2, 3}
+	Of(nums).Peek(func(n int) { peeked = append(peeked, n) }).Collect()
+	if len(peeked) != 3 || peeked[0] != 1 || peeked[2] != 3 {
+		t.Errorf("expected [1 2 3], got %v", peeked)
+	}
+}
