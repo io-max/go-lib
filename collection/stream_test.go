@@ -173,3 +173,38 @@ func TestSorted(t *testing.T) {
 		t.Errorf("expected [1 2 3], got %v", sorted)
 	}
 }
+
+func TestForEach(t *testing.T) {
+	var sum int
+	Of([]int{1, 2, 3}).ForEach(func(n int) { sum += n })
+	if sum != 6 {
+		t.Errorf("expected 6, got %d", sum)
+	}
+}
+
+func TestToMap(t *testing.T) {
+	users := []User{{ID: 1, Name: "a"}, {ID: 2, Name: "b"}}
+	m := ToMap(Of(users), func(u User) int64 { return u.ID })
+	if len(m) != 2 || m[1].Name != "a" {
+		t.Errorf("expected map with 2 entries, got %v", m)
+	}
+}
+
+func TestToMapWithValue(t *testing.T) {
+	users := []User{{ID: 1, Name: "a"}, {ID: 2, Name: "b"}}
+	m := ToMapWithValue(Of(users), func(u User) int64 { return u.ID }, func(u User) string { return u.Name })
+	if len(m) != 2 || m[1] != "a" || m[2] != "b" {
+		t.Errorf("expected map with 2 entries, got %v", m)
+	}
+}
+
+func TestToSet(t *testing.T) {
+	nums := []int{1, 2, 2, 3, 3, 3}
+	s := ToSet(Of(nums))
+	if len(s) != 3 {
+		t.Errorf("expected set with 3 entries, got %v", s)
+	}
+	if _, ok := s[1]; !ok {
+		t.Errorf("expected 1 in set")
+	}
+}

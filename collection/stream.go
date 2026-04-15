@@ -228,3 +228,33 @@ func (s *Stream[T]) Sorted(less func(T, T) bool) *Stream[T] {
 		},
 	}
 }
+
+func (s *Stream[T]) ForEach(fn func(T)) {
+	for _, item := range s.Collect() {
+		fn(item)
+	}
+}
+
+func ToMap[T any, K comparable](s *Stream[T], keyFn func(T) K) map[K]T {
+	result := make(map[K]T)
+	for _, item := range s.Collect() {
+		result[keyFn(item)] = item
+	}
+	return result
+}
+
+func ToMapWithValue[T any, K comparable, V any](s *Stream[T], keyFn func(T) K, valueFn func(T) V) map[K]V {
+	result := make(map[K]V)
+	for _, item := range s.Collect() {
+		result[keyFn(item)] = valueFn(item)
+	}
+	return result
+}
+
+func ToSet[T comparable](s *Stream[T]) map[T]struct{} {
+	result := make(map[T]struct{})
+	for _, item := range s.Collect() {
+		result[item] = struct{}{}
+	}
+	return result
+}
