@@ -490,3 +490,11 @@ func StringToFloat64E(s *Stream[string]) (*Stream[float64], error) {
 	}
 	return Of(result), nil
 }
+
+func ToInt[T ~int64 | ~int32](s *Stream[T]) *Stream[int] {
+	return Map(s, func(v T) int { return int(v) })
+}
+
+func ToFloat64[T ~int | ~int64 | ~int32 | ~float64 | ~float32](s *Stream[T]) *Stream[float64] {
+	return Map(s, func(v T) float64 { return float64(v) })
+}

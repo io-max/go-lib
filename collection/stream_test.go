@@ -246,3 +246,17 @@ func TestStringToFloat64(t *testing.T) {
 		t.Errorf("expected [1.5 2.5], got %v", result)
 	}
 }
+
+func TestToInt(t *testing.T) {
+	result := ToInt(Of([]int64{1, 2, 3})).Collect()
+	if len(result) != 3 || result[0] != 1 {
+		t.Errorf("expected [1 2 3], got %v", result)
+	}
+}
+
+func TestToFloat64(t *testing.T) {
+	result := ToFloat64(Of([]int64{1, 2, 3})).Collect()
+	if len(result) != 3 || result[0] != 1.0 {
+		t.Errorf("expected [1.0 2.0 3.0], got %v", result)
+	}
+}
