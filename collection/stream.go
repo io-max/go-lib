@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 )
@@ -439,4 +440,12 @@ func ToSet[T comparable](s *Stream[T]) map[T]struct{} {
 		result[item] = struct{}{}
 	}
 	return result
+}
+
+func ToString[T ~int | ~int64 | ~int32 | ~float64 | ~float32](s *Stream[T]) *Stream[string] {
+	return Map(s, func(v T) string { return fmt.Sprintf("%v", v) })
+}
+
+func ToStringE[T ~int | ~int64 | ~int32 | ~float64 | ~float32](s *Stream[T]) (*Stream[string], error) {
+	return ToString(s), nil
 }

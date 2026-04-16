@@ -208,3 +208,20 @@ func TestToSet(t *testing.T) {
 		t.Errorf("expected 1 in set")
 	}
 }
+
+func TestToString(t *testing.T) {
+	result := ToString(Of([]int64{1, 2, 3})).Collect()
+	if len(result) != 3 || result[0] != "1" || result[1] != "2" || result[2] != "3" {
+		t.Errorf("expected [1 2 3], got %v", result)
+	}
+}
+
+func TestToStringE(t *testing.T) {
+	result, err := ToStringE(Of([]int64{1, 2, 3}))
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if result.Collect()[0] != "1" {
+		t.Errorf("expected [1 2 3]")
+	}
+}
