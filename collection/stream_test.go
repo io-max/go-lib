@@ -1,6 +1,9 @@
 package collection
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 type User struct {
 	ID   int64
@@ -272,5 +275,15 @@ func TestToBytes(t *testing.T) {
 	result := ToBytes(Of([]string{"hello", "world"})).Collect()
 	if len(result) != 2 || string(result[0]) != "hello" {
 		t.Errorf("expected [hello world], got %v", result)
+	}
+}
+
+func TestConvert(t *testing.T) {
+	result := Convert(Of([]int{1, 2, 3}), func(i int) string {
+		return fmt.Sprintf("num_%d", i)
+	}).Collect()
+	expected := []string{"num_1", "num_2", "num_3"}
+	if len(result) != 3 || result[0] != "num_1" {
+		t.Errorf("expected %v, got %v", expected, result)
 	}
 }

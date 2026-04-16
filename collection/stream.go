@@ -97,6 +97,10 @@ func Map[T, U any](s *Stream[T], fn func(T) U) *Stream[U] {
 	}
 }
 
+func Convert[T any, U any](s *Stream[T], fn func(T) U) *Stream[U] {
+	return Map(s, fn)
+}
+
 // FlatMap 对流中的每个元素执行转换,将返回的切片展开合并到结果流中。
 // 常用于扁平化嵌套结构。
 //
