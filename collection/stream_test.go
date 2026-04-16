@@ -2,6 +2,7 @@ package collection
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 )
 
@@ -312,5 +313,14 @@ func TestDifference(t *testing.T) {
 	result := Difference(a, b).Collect()
 	if len(result) != 1 || result[0] != 1 {
 		t.Errorf("expected [1], got %v", result)
+	}
+}
+
+func TestIntersectWith(t *testing.T) {
+	a := Of([]int64{1, 2, 3})
+	b := Of([]string{"2", "3", "4"})
+	result := IntersectWith(a, b, func(i int64) string { return strconv.FormatInt(i, 10) }).Collect()
+	if len(result) != 2 || result[0] != 2 || result[1] != 3 {
+		t.Errorf("expected [2 3], got %v", result)
 	}
 }

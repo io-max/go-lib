@@ -548,3 +548,15 @@ func Difference[T any](a, b *Stream[T]) *Stream[T] {
 func DifferenceE[T any](a, b *Stream[T]) (*Stream[T], error) {
 	return Difference(a, b), nil
 }
+
+func IntersectWith[T any, U any](a *Stream[T], b *Stream[U], convertFn func(T) U) *Stream[T] {
+	bData := b.Collect()
+	return Filter(a.Distinct(), func(item T) bool {
+		converted := convertFn(item)
+		return Of(bData).AnyMatch(func(bItem U) bool { return reflect.DeepEqual(converted, bItem) })
+	})
+}
+
+func IntersectWithE[T any, U any](a *Stream[T], b *Stream[U], convertFn func(T) U) (*Stream[T], error) {
+	return IntersectWith(a, b, convertFn), nil
+}
