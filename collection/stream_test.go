@@ -340,3 +340,12 @@ func TestGroupBy(t *testing.T) {
 		t.Errorf("unexpected group sizes: %v", result)
 	}
 }
+
+func TestGroupByMulti(t *testing.T) {
+	users := []GroupUser{{Dept: "A", Name: "a"}, {Dept: "B", Name: "b"}, {Dept: "A", Name: "c"}}
+	type key struct{ Dept string }
+	result := GroupByMulti(Of(users), func(u GroupUser) key { return key{u.Dept} })
+	if len(result) != 2 {
+		t.Errorf("expected 2 groups, got %v", len(result))
+	}
+}

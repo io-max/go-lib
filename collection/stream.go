@@ -573,3 +573,16 @@ func GroupBy[T any, K comparable](s *Stream[T], keyFn func(T) K) map[K][]T {
 func GroupByE[T any, K comparable](s *Stream[T], keyFn func(T) K) (map[K][]T, error) {
 	return GroupBy(s, keyFn), nil
 }
+
+func GroupByMulti[T any, K comparable](s *Stream[T], keyFn func(T) K) map[K][]T {
+	result := make(map[K][]T)
+	for _, item := range s.Collect() {
+		key := keyFn(item)
+		result[key] = append(result[key], item)
+	}
+	return result
+}
+
+func GroupByMultiE[T any, K comparable](s *Stream[T], keyFn func(T) K) (map[K][]T, error) {
+	return GroupByMulti(s, keyFn), nil
+}
