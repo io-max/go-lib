@@ -260,3 +260,17 @@ func TestToFloat64(t *testing.T) {
 		t.Errorf("expected [1.0 2.0 3.0], got %v", result)
 	}
 }
+
+func TestToHexString(t *testing.T) {
+	result := ToHexString(Of([]int64{255, 16})).Collect()
+	if len(result) != 2 || result[0] != "ff" || result[1] != "10" {
+		t.Errorf("expected [ff 10], got %v", result)
+	}
+}
+
+func TestToBytes(t *testing.T) {
+	result := ToBytes(Of([]string{"hello", "world"})).Collect()
+	if len(result) != 2 || string(result[0]) != "hello" {
+		t.Errorf("expected [hello world], got %v", result)
+	}
+}

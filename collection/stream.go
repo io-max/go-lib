@@ -498,3 +498,19 @@ func ToInt[T ~int64 | ~int32](s *Stream[T]) *Stream[int] {
 func ToFloat64[T ~int | ~int64 | ~int32 | ~float64 | ~float32](s *Stream[T]) *Stream[float64] {
 	return Map(s, func(v T) float64 { return float64(v) })
 }
+
+func ToHexString[T ~int | ~int64 | ~int32](s *Stream[T]) *Stream[string] {
+	return Map(s, func(v T) string { return fmt.Sprintf("%x", v) })
+}
+
+func ToHexStringE[T ~int | ~int64 | ~int32](s *Stream[T]) (*Stream[string], error) {
+	return ToHexString(s), nil
+}
+
+func ToBytes(s *Stream[string]) *Stream[[]byte] {
+	return Map(s, func(v string) []byte { return []byte(v) })
+}
+
+func ToBytesE(s *Stream[string]) (*Stream[[]byte], error) {
+	return ToBytes(s), nil
+}
