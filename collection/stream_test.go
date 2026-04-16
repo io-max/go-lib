@@ -324,3 +324,19 @@ func TestIntersectWith(t *testing.T) {
 		t.Errorf("expected [2 3], got %v", result)
 	}
 }
+
+type GroupUser struct {
+	Dept string
+	Name string
+}
+
+func TestGroupBy(t *testing.T) {
+	users := []GroupUser{{Dept: "A", Name: "a"}, {Dept: "B", Name: "b"}, {Dept: "A", Name: "c"}}
+	result := GroupBy(Of(users), func(u GroupUser) string { return u.Dept })
+	if len(result) != 2 {
+		t.Errorf("expected 2 groups, got %v", len(result))
+	}
+	if len(result["A"]) != 2 || len(result["B"]) != 1 {
+		t.Errorf("unexpected group sizes: %v", result)
+	}
+}

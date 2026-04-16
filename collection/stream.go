@@ -560,3 +560,16 @@ func IntersectWith[T any, U any](a *Stream[T], b *Stream[U], convertFn func(T) U
 func IntersectWithE[T any, U any](a *Stream[T], b *Stream[U], convertFn func(T) U) (*Stream[T], error) {
 	return IntersectWith(a, b, convertFn), nil
 }
+
+func GroupBy[T any, K comparable](s *Stream[T], keyFn func(T) K) map[K][]T {
+	result := make(map[K][]T)
+	for _, item := range s.Collect() {
+		key := keyFn(item)
+		result[key] = append(result[key], item)
+	}
+	return result
+}
+
+func GroupByE[T any, K comparable](s *Stream[T], keyFn func(T) K) (map[K][]T, error) {
+	return GroupBy(s, keyFn), nil
+}
