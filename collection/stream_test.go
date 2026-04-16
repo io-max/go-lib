@@ -349,3 +349,16 @@ func TestGroupByMulti(t *testing.T) {
 		t.Errorf("expected 2 groups, got %v", len(result))
 	}
 }
+
+func TestGroupByWithValue(t *testing.T) {
+	users := []GroupUser{{Dept: "A", Name: "a"}, {Dept: "B", Name: "b"}, {Dept: "A", Name: "c"}}
+	result := GroupByWithValue(Of(users),
+		func(u GroupUser) string { return u.Dept },
+		func(u GroupUser) string { return u.Name })
+	if len(result) != 2 {
+		t.Errorf("expected 2 groups, got %v", len(result))
+	}
+	if len(result["A"]) != 2 || result["A"][0] != "a" || result["A"][1] != "c" {
+		t.Errorf("unexpected group values: %v", result)
+	}
+}
