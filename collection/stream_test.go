@@ -225,3 +225,24 @@ func TestToStringE(t *testing.T) {
 		t.Errorf("expected [1 2 3]")
 	}
 }
+
+func TestStringToInt64(t *testing.T) {
+	result := StringToInt64(Of([]string{"1", "2", "3"})).Collect()
+	if len(result) != 3 || result[0] != 1 || result[1] != 2 || result[2] != 3 {
+		t.Errorf("expected [1 2 3], got %v", result)
+	}
+}
+
+func TestStringToInt64WithError(t *testing.T) {
+	_, err := StringToInt64E(Of([]string{"1", "a", "3"}))
+	if err == nil {
+		t.Errorf("expected error for invalid conversion")
+	}
+}
+
+func TestStringToFloat64(t *testing.T) {
+	result := StringToFloat64(Of([]string{"1.5", "2.5"})).Collect()
+	if len(result) != 2 || result[0] != 1.5 || result[1] != 2.5 {
+		t.Errorf("expected [1.5 2.5], got %v", result)
+	}
+}

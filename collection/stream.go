@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 )
 
 // Stream 提供流式操作支持,支持链式调用和延迟求值。
@@ -448,4 +449,44 @@ func ToString[T ~int | ~int64 | ~int32 | ~float64 | ~float32](s *Stream[T]) *Str
 
 func ToStringE[T ~int | ~int64 | ~int32 | ~float64 | ~float32](s *Stream[T]) (*Stream[string], error) {
 	return ToString(s), nil
+}
+
+func StringToInt64(s *Stream[string]) *Stream[int64] {
+	return Map(s, func(v string) int64 {
+		n, _ := strconv.ParseInt(v, 10, 64)
+		return n
+	})
+}
+
+func StringToInt64E(s *Stream[string]) (*Stream[int64], error) {
+	data := s.Collect()
+	result := make([]int64, len(data))
+	for i, v := range data {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = n
+	}
+	return Of(result), nil
+}
+
+func StringToFloat64(s *Stream[string]) *Stream[float64] {
+	return Map(s, func(v string) float64 {
+		f, _ := strconv.ParseFloat(v, 64)
+		return f
+	})
+}
+
+func StringToFloat64E(s *Stream[string]) (*Stream[float64], error) {
+	data := s.Collect()
+	result := make([]float64, len(data))
+	for i, v := range data {
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = f
+	}
+	return Of(result), nil
 }
