@@ -287,3 +287,30 @@ func TestConvert(t *testing.T) {
 		t.Errorf("expected %v, got %v", expected, result)
 	}
 }
+
+func TestUnion(t *testing.T) {
+	a := Of([]int{1, 2, 3})
+	b := Of([]int{2, 3, 4})
+	result := Union(a, b).Collect()
+	if len(result) != 4 {
+		t.Errorf("expected 4 elements, got %v", result)
+	}
+}
+
+func TestIntersect(t *testing.T) {
+	a := Of([]int{1, 2, 3})
+	b := Of([]int{2, 3, 4})
+	result := Intersect(a, b).Collect()
+	if len(result) != 2 || result[0] != 2 || result[1] != 3 {
+		t.Errorf("expected [2 3], got %v", result)
+	}
+}
+
+func TestDifference(t *testing.T) {
+	a := Of([]int{1, 2, 3})
+	b := Of([]int{2, 3, 4})
+	result := Difference(a, b).Collect()
+	if len(result) != 1 || result[0] != 1 {
+		t.Errorf("expected [1], got %v", result)
+	}
+}

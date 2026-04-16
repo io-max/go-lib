@@ -518,3 +518,33 @@ func ToBytes(s *Stream[string]) *Stream[[]byte] {
 func ToBytesE(s *Stream[string]) (*Stream[[]byte], error) {
 	return ToBytes(s), nil
 }
+
+func Union[T any](a, b *Stream[T]) *Stream[T] {
+	return FlatMap(Of([][]T{a.Collect(), b.Collect()}), func(s []T) []T { return s }).Distinct()
+}
+
+func UnionE[T any](a, b *Stream[T]) (*Stream[T], error) {
+	return Union(a, b), nil
+}
+
+func Intersect[T any](a, b *Stream[T]) *Stream[T] {
+	bData := b.Collect()
+	return a.Distinct().Filter(func(item T) bool {
+		return Of(bData).AnyMatch(func(bItem T) bool { return reflect.DeepEqual(item, bItem) })
+	})
+}
+
+func IntersectE[T any](a, b *Stream[T]) (*Stream[T], error) {
+	return Intersect(a, b), nil
+}
+
+func Difference[T any](a, b *Stream[T]) *Stream[T] {
+	bData := b.Collect()
+	return a.Distinct().Filter(func(item T) bool {
+		return !Of(bData).AnyMatch(func(bItem T) bool { return reflect.DeepEqual(item, bItem) })
+	})
+}
+
+func DifferenceE[T any](a, b *Stream[T]) (*Stream[T], error) {
+	return Difference(a, b), nil
+}
