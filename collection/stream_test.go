@@ -214,73 +214,63 @@ func TestToSet(t *testing.T) {
 }
 
 func TestToString(t *testing.T) {
-	result := ToString(Of([]int64{1, 2, 3})).Collect()
+	result := ToString([]int64{1, 2, 3})
 	if len(result) != 3 || result[0] != "1" || result[1] != "2" || result[2] != "3" {
 		t.Errorf("expected [1 2 3], got %v", result)
 	}
 }
 
-func TestToStringE(t *testing.T) {
-	result, err := ToStringE(Of([]int64{1, 2, 3}))
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if result.Collect()[0] != "1" {
-		t.Errorf("expected [1 2 3]")
-	}
-}
-
 func TestStringToInt64(t *testing.T) {
-	result := StringToInt64(Of([]string{"1", "2", "3"})).Collect()
+	result := StringToInt64([]string{"1", "2", "3"})
 	if len(result) != 3 || result[0] != 1 || result[1] != 2 || result[2] != 3 {
 		t.Errorf("expected [1 2 3], got %v", result)
 	}
 }
 
 func TestStringToInt64WithError(t *testing.T) {
-	_, err := StringToInt64E(Of([]string{"1", "a", "3"}))
+	_, err := StringToInt64E([]string{"1", "a", "3"})
 	if err == nil {
 		t.Errorf("expected error for invalid conversion")
 	}
 }
 
 func TestStringToFloat64(t *testing.T) {
-	result := StringToFloat64(Of([]string{"1.5", "2.5"})).Collect()
+	result := StringToFloat64([]string{"1.5", "2.5"})
 	if len(result) != 2 || result[0] != 1.5 || result[1] != 2.5 {
 		t.Errorf("expected [1.5 2.5], got %v", result)
 	}
 }
 
 func TestToInt(t *testing.T) {
-	result := ToInt(Of([]int64{1, 2, 3})).Collect()
+	result := ToInt([]int64{1, 2, 3})
 	if len(result) != 3 || result[0] != 1 {
 		t.Errorf("expected [1 2 3], got %v", result)
 	}
 }
 
 func TestToFloat64(t *testing.T) {
-	result := ToFloat64(Of([]int64{1, 2, 3})).Collect()
+	result := ToFloat64([]int64{1, 2, 3})
 	if len(result) != 3 || result[0] != 1.0 {
 		t.Errorf("expected [1.0 2.0 3.0], got %v", result)
 	}
 }
 
 func TestToHexString(t *testing.T) {
-	result := ToHexString(Of([]int64{255, 16})).Collect()
+	result := ToHexString([]int64{255, 16})
 	if len(result) != 2 || result[0] != "ff" || result[1] != "10" {
 		t.Errorf("expected [ff 10], got %v", result)
 	}
 }
 
 func TestToBytes(t *testing.T) {
-	result := ToBytes(Of([]string{"hello", "world"})).Collect()
+	result := ToBytes([]string{"hello", "world"})
 	if len(result) != 2 || string(result[0]) != "hello" {
 		t.Errorf("expected [hello world], got %v", result)
 	}
 }
 
 func TestConvert(t *testing.T) {
-	result := Convert(Of([]int{1, 2, 3}), func(i int) string {
+	result := Map(Of([]int{1, 2, 3}), func(i int) string {
 		return fmt.Sprintf("num_%d", i)
 	}).Collect()
 	expected := []string{"num_1", "num_2", "num_3"}
@@ -290,36 +280,28 @@ func TestConvert(t *testing.T) {
 }
 
 func TestUnion(t *testing.T) {
-	a := Of([]int{1, 2, 3})
-	b := Of([]int{2, 3, 4})
-	result := Union(a, b).Collect()
+	result := Union([]int{1, 2, 3}, []int{2, 3, 4})
 	if len(result) != 4 {
 		t.Errorf("expected 4 elements, got %v", result)
 	}
 }
 
 func TestIntersect(t *testing.T) {
-	a := Of([]int{1, 2, 3})
-	b := Of([]int{2, 3, 4})
-	result := Intersect(a, b).Collect()
+	result := Intersect([]int{1, 2, 3}, []int{2, 3, 4})
 	if len(result) != 2 || result[0] != 2 || result[1] != 3 {
 		t.Errorf("expected [2 3], got %v", result)
 	}
 }
 
 func TestDifference(t *testing.T) {
-	a := Of([]int{1, 2, 3})
-	b := Of([]int{2, 3, 4})
-	result := Difference(a, b).Collect()
+	result := Difference([]int{1, 2, 3}, []int{2, 3, 4})
 	if len(result) != 1 || result[0] != 1 {
 		t.Errorf("expected [1], got %v", result)
 	}
 }
 
 func TestIntersectWith(t *testing.T) {
-	a := Of([]int64{1, 2, 3})
-	b := Of([]string{"2", "3", "4"})
-	result := IntersectWith(a, b, func(i int64) string { return strconv.FormatInt(i, 10) }).Collect()
+	result := IntersectWith([]int64{1, 2, 3}, []string{"2", "3", "4"}, func(i int64) string { return strconv.FormatInt(i, 10) })
 	if len(result) != 2 || result[0] != 2 || result[1] != 3 {
 		t.Errorf("expected [2 3], got %v", result)
 	}
@@ -332,7 +314,7 @@ type GroupUser struct {
 
 func TestGroupBy(t *testing.T) {
 	users := []GroupUser{{Dept: "A", Name: "a"}, {Dept: "B", Name: "b"}, {Dept: "A", Name: "c"}}
-	result := GroupBy(Of(users), func(u GroupUser) string { return u.Dept })
+	result := GroupBy(users, func(u GroupUser) string { return u.Dept })
 	if len(result) != 2 {
 		t.Errorf("expected 2 groups, got %v", len(result))
 	}
@@ -344,7 +326,7 @@ func TestGroupBy(t *testing.T) {
 func TestGroupByMulti(t *testing.T) {
 	users := []GroupUser{{Dept: "A", Name: "a"}, {Dept: "B", Name: "b"}, {Dept: "A", Name: "c"}}
 	type key struct{ Dept string }
-	result := GroupByMulti(Of(users), func(u GroupUser) key { return key{u.Dept} })
+	result := GroupByMulti(users, func(u GroupUser) key { return key{u.Dept} })
 	if len(result) != 2 {
 		t.Errorf("expected 2 groups, got %v", len(result))
 	}
@@ -352,7 +334,7 @@ func TestGroupByMulti(t *testing.T) {
 
 func TestGroupByWithValue(t *testing.T) {
 	users := []GroupUser{{Dept: "A", Name: "a"}, {Dept: "B", Name: "b"}, {Dept: "A", Name: "c"}}
-	result := GroupByWithValue(Of(users),
+	result := GroupByWithValue(users,
 		func(u GroupUser) string { return u.Dept },
 		func(u GroupUser) string { return u.Name })
 	if len(result) != 2 {
